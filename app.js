@@ -272,15 +272,15 @@ const App = (() => {
             const dtStart = pad4(greg.year) + pad2(greg.month) + pad2(greg.day);
             const dtEnd = pad4(gregNext.year) + pad2(gregNext.month) + pad2(gregNext.day);
 
-            const hijriTitle = `${hijri.day} ${H.MONTH_NAMES_EN[hijri.month - 1]} ${hijri.year} AH`;
-            const hijriTitleAr = `${hijri.day} ${H.MONTH_NAMES[hijri.month - 1]} ${hijri.year} هـ`;
+            const hijriTitle = `${hijri.day} ${H.monthName(hijri.month - 1)} ${hijri.year} ${H.t('hSuffix')}`;
+            const gregTitle = `${greg.day} ${H.gregMonthName(greg.month - 1)} ${greg.year} ${H.t('gSuffix')}`;
             const uid = `hijri-${hijri.year}-${hijri.month}-${hijri.day}@al-tawfiqat`;
 
             lines.push('BEGIN:VEVENT');
             lines.push(`DTSTART;VALUE=DATE:${dtStart}`);
             lines.push(`DTEND;VALUE=DATE:${dtEnd}`);
             lines.push(`SUMMARY:${hijriTitle}`);
-            lines.push(`DESCRIPTION:${hijriTitleAr}`);
+            lines.push(`DESCRIPTION:${gregTitle}`);
             lines.push(`UID:${uid}`);
             lines.push('END:VEVENT');
         }
@@ -417,7 +417,6 @@ const App = (() => {
             cell.title = `${H.dayName(day.dayOfWeek)} — ${gregDate}`;
 
             if ((idx % 7) === 5 || (idx % 7) === 6) cell.classList.add('weekend-col');
-            if (day.dayOfWeek === 6) cell.classList.add('friday-col');
 
             cell.addEventListener('click', (e) => selectDay(day, e));
             grid.appendChild(cell);

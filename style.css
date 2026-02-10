@@ -317,7 +317,7 @@ body::before {
 
 .calendar-cell .greg-day {
     font-size: 0.68rem;
-    color: #b91c3c;
+    color: #0e7490;
     line-height: 1;
 }
 
@@ -326,9 +326,6 @@ body::before {
     background: rgba(39, 166, 120, 0.04);
 }
 
-.calendar-cell.friday-col .hijri-day {
-    color: var(--green-600);
-}
 
 /* شهر آخر */
 .calendar-cell.other-month {
@@ -355,7 +352,7 @@ body::before {
 }
 
 .calendar-cell.today .greg-day {
-    color: rgba(255,255,255,0.75);
+    color: rgba(200,240,255,0.8);
 }
 
 .calendar-cell.today:hover {
