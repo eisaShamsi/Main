@@ -42,6 +42,16 @@
                 </select>
             </div>
 
+            <!-- بداية الأسبوع -->
+            <div class="tool-group">
+                <label class="tool-label">بداية الأسبوع</label>
+                <select id="weekstart-select" class="mode-select">
+                    <option value="0">السبت</option>
+                    <option value="1">الأحد</option>
+                    <option value="2">الإثنين</option>
+                </select>
+            </div>
+
             <!-- التصحيح اليدوي -->
             <div class="tool-group">
                 <label class="tool-label">تصحيح الشهر الحالي</label>
@@ -79,16 +89,8 @@
             <button class="today-nav-btn" id="today-btn">اليوم</button>
         </div>
 
-        <!-- رؤوس الأيام -->
-        <div class="day-headers">
-            <div class="day-header">السبت</div>
-            <div class="day-header">الأحد</div>
-            <div class="day-header">الإثنين</div>
-            <div class="day-header">الثلاثاء</div>
-            <div class="day-header">الأربعاء</div>
-            <div class="day-header">الخميس</div>
-            <div class="day-header">الجمعة</div>
-        </div>
+        <!-- رؤوس الأيام (تُولَّد ديناميكياً) -->
+        <div class="day-headers" id="day-headers"></div>
 
         <!-- شبكة التقويم -->
         <div class="calendar-grid" id="calendar-grid"></div>

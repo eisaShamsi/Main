@@ -42,6 +42,7 @@ const HijriCalendar = (() => {
 
     // ─── الحالة ─────────────────────────────────────────────
     let currentMode = 'astronomical'; // الافتراضي: فلكي
+    let weekStart = 0; // 0=السبت، 1=الأحد، 2=الإثنين
 
     // تصحيحات المستخدم: { "1447-9": +1, "1447-10": -1 }
     // المفتاح = "سنة-شهر"، القيمة = عدد أيام الإزاحة
@@ -54,6 +55,36 @@ const HijriCalendar = (() => {
     }
 
     function getMode() { return currentMode; }
+
+    // ─── بداية الأسبوع ─────────────────────────────────────
+    function setWeekStart(ws) {
+        if (ws >= 0 && ws <= 2) weekStart = ws;
+    }
+
+    function getWeekStart() { return weekStart; }
+
+    function _loadWeekStart() {
+        try {
+            const v = parseInt(localStorage.getItem('hijri-weekstart'));
+            if (v >= 0 && v <= 2) weekStart = v;
+        } catch (e) { /* ignore */ }
+    }
+
+    function _saveWeekStart() {
+        try { localStorage.setItem('hijri-weekstart', weekStart); }
+        catch (e) { /* ignore */ }
+    }
+
+    // ─── رقم الأسبوع في السنة الهجرية ──────────────────────
+    // الأسبوع الأول هو الذي يحتوي على 1 محرم
+    function weekOfYear(jdn, hijriYear) {
+        const muharram1JDN = hijriToJDN(hijriYear, 1, 1);
+        // أول يوم بداية أسبوع يسبق أو يساوي 1 محرم
+        const muharram1DOW = dayOfWeek(muharram1JDN);
+        const offset = (muharram1DOW - weekStart + 7) % 7;
+        const firstWeekStart = muharram1JDN - offset;
+        return Math.floor((jdn - firstWeekStart) / 7) + 1;
+    }
 
     // ─── تصحيحات المستخدم ───────────────────────────────────
     function setCorrection(year, month, offsetDays) {
@@ -513,12 +544,15 @@ const HijriCalendar = (() => {
             });
         }
 
+        // عدد أيام البادئة حسب بداية الأسبوع المختارة
+        const leadingCount = (firstDayOfWeek - weekStart + 7) % 7;
+
         // أيام الشهر السابق
         const prevMonth = month === 1 ? 12 : month - 1;
         const prevYear = month === 1 ? year - 1 : year;
         const prevMonthDays = daysInMonth(prevYear, prevMonth);
         const leadingDays = [];
-        for (let i = firstDayOfWeek - 1; i >= 0; i--) {
+        for (let i = leadingCount - 1; i >= 0; i--) {
             const d = prevMonthDays - i;
             const actualJDN = hijriToJDN(prevYear, prevMonth, d);
             const greg = jdnToGregorian(actualJDN);
@@ -557,6 +591,19 @@ const HijriCalendar = (() => {
             gregorianRange = `${GREGORIAN_MONTH_NAMES[firstGreg.month - 1]} ${firstGreg.year} – ${GREGORIAN_MONTH_NAMES[lastGreg.month - 1]} ${lastGreg.year}`;
         }
 
+        // إضافة رقم الأسبوع لكل يوم
+        const allDays = [...leadingDays, ...days, ...trailingDays];
+        allDays.forEach(day => {
+            const hDate = jdnToHijri(day.jdn);
+            day.weekNumber = weekOfYear(day.jdn, hDate.year);
+        });
+
+        // ترتيب رؤوس الأيام حسب بداية الأسبوع
+        const orderedDayNames = [];
+        for (let i = 0; i < 7; i++) {
+            orderedDayNames.push(DAY_NAMES[(weekStart + i) % 7]);
+        }
+
         return {
             year, month,
             monthName: MONTH_NAMES[month - 1],
@@ -567,13 +614,16 @@ const HijriCalendar = (() => {
             correction,
             cumulativeCorrection: cumCorr,
             mode: currentMode,
-            days: [...leadingDays, ...days, ...trailingDays]
+            weekStart,
+            orderedDayNames,
+            days: allDays
         };
     }
 
     // ─── تهيئة ──────────────────────────────────────────────
     _loadCorrections();
     _loadMode();
+    _loadWeekStart();
 
     // ─── الواجهة العامة ─────────────────────────────────────
     return {
@@ -581,6 +631,9 @@ const HijriCalendar = (() => {
         setMode, getMode, _saveMode,
         MODE_NAMES,
         Tabular, Astronomical,
+
+        // بداية الأسبوع
+        setWeekStart, getWeekStart, _saveWeekStart, weekOfYear,
 
         // التصحيحات
         setCorrection, getCorrection, clearCorrections, getAllCorrections,

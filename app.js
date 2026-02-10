@@ -16,6 +16,7 @@ const App = (() => {
 
         setupNavigation();
         setupModeSelector();
+        setupWeekStartSelector();
         setupConverter();
         setupCorrectionControls();
         renderCalendar();
@@ -81,6 +82,17 @@ const App = (() => {
         badge.className = 'mode-badge ' + (H.getMode() === 'astronomical' ? 'mode-astro' : 'mode-tab');
 
         updateCorrectionDisplay();
+    }
+
+    // ─── اختيار بداية الأسبوع ────────────────────────────────
+    function setupWeekStartSelector() {
+        const select = document.getElementById('weekstart-select');
+        select.value = H.getWeekStart();
+        select.addEventListener('change', () => {
+            H.setWeekStart(parseInt(select.value));
+            H._saveWeekStart();
+            renderCalendar();
+        });
     }
 
     // ─── أدوات التصحيح ──────────────────────────────────────
@@ -197,11 +209,35 @@ const App = (() => {
         const leapBadge = document.getElementById('leap-badge');
         leapBadge.style.display = data.isLeapYear ? 'inline-block' : 'none';
 
+        // رؤوس الأيام الديناميكية
+        const headersEl = document.getElementById('day-headers');
+        headersEl.innerHTML = '';
+        const weekHeader = document.createElement('div');
+        weekHeader.className = 'day-header week-header';
+        weekHeader.textContent = 'أسبوع';
+        headersEl.appendChild(weekHeader);
+        data.orderedDayNames.forEach((name, i) => {
+            const dh = document.createElement('div');
+            dh.className = 'day-header';
+            // آخر يوم في الأسبوع (الجمعة عادة) يبرز
+            if (i === 6) dh.classList.add('day-header-last');
+            dh.textContent = name;
+            headersEl.appendChild(dh);
+        });
+
         // شبكة التقويم
         const grid = document.getElementById('calendar-grid');
         grid.innerHTML = '';
 
-        data.days.forEach(day => {
+        data.days.forEach((day, idx) => {
+            // إضافة خلية رقم الأسبوع في بداية كل صف
+            if (idx % 7 === 0) {
+                const weekCell = document.createElement('div');
+                weekCell.className = 'week-number';
+                weekCell.textContent = H.toArabicNumerals(day.weekNumber);
+                grid.appendChild(weekCell);
+            }
+
             const cell = document.createElement('div');
             cell.className = 'calendar-cell';
             if (day.isOtherMonth) cell.classList.add('other-month');
@@ -219,6 +255,9 @@ const App = (() => {
 
             const gregDate = `${day.gregorian.day}/${day.gregorian.month}/${day.gregorian.year}`;
             cell.title = `${H.DAY_NAMES[day.dayOfWeek]} — ${gregDate}م`;
+
+            // تحديد يوم الجمعة (آخر عمود)
+            if ((idx % 7) === 6) cell.classList.add('friday-col');
 
             cell.addEventListener('click', (e) => selectDay(day, e));
             grid.appendChild(cell);

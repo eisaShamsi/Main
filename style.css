@@ -260,7 +260,7 @@ body::before {
 /* ─── رؤوس الأيام ───────────────────────────────────────── */
 .day-headers {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
+    grid-template-columns: 42px repeat(7, 1fr);
     background: var(--green-50);
     border-bottom: 1px solid var(--green-100);
 }
@@ -273,7 +273,13 @@ body::before {
     color: var(--green-700);
 }
 
-.day-header:last-child {
+.day-header.week-header {
+    font-size: 0.65rem;
+    color: var(--gray-400);
+    font-weight: 600;
+}
+
+.day-header.day-header-last {
     color: var(--green-600);
     background: rgba(39, 166, 120, 0.08);
 }
@@ -281,10 +287,23 @@ body::before {
 /* ─── شبكة التقويم ───────────────────────────────────────── */
 .calendar-grid {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
+    grid-template-columns: 42px repeat(7, 1fr);
     gap: 1px;
     background: var(--gray-100);
     padding: 1px;
+}
+
+/* ─── خلية رقم الأسبوع ─────────────────────────────────── */
+.week-number {
+    background: var(--gray-50);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--gray-400);
+    min-height: 62px;
+    font-family: var(--font-display);
 }
 
 .calendar-cell {
@@ -321,11 +340,11 @@ body::before {
 }
 
 /* يوم الجمعة */
-.calendar-cell:nth-child(7n) {
+.calendar-cell.friday-col {
     background: rgba(39, 166, 120, 0.04);
 }
 
-.calendar-cell:nth-child(7n) .hijri-day {
+.calendar-cell.friday-col .hijri-day {
     color: var(--green-600);
 }
 
@@ -717,6 +736,19 @@ body::before {
         font-size: 1.2rem;
     }
 
+    .day-headers {
+        grid-template-columns: 32px repeat(7, 1fr);
+    }
+
+    .calendar-grid {
+        grid-template-columns: 32px repeat(7, 1fr);
+    }
+
+    .week-number {
+        font-size: 0.6rem;
+        min-height: 50px;
+    }
+
     .calendar-cell {
         min-height: 50px;
         padding: 6px 3px;
@@ -747,9 +779,25 @@ body::before {
 }
 
 @media (max-width: 380px) {
+    .day-headers {
+        grid-template-columns: 26px repeat(7, 1fr);
+    }
+
+    .calendar-grid {
+        grid-template-columns: 26px repeat(7, 1fr);
+    }
+
     .day-header {
         font-size: 0.65rem;
         padding: 8px 2px;
+    }
+
+    .day-header.week-header {
+        font-size: 0.55rem;
+    }
+
+    .week-number {
+        font-size: 0.55rem;
     }
 
     .calendar-cell .hijri-day {
