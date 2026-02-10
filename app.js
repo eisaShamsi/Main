@@ -381,8 +381,7 @@ const App = (() => {
         data.orderedDayNames.forEach((name, i) => {
             const dh = document.createElement('div');
             dh.className = 'day-header';
-            const dayIdx = (H.getWeekStart() + i) % 7;
-            if (dayIdx === 6 || dayIdx === 0) dh.classList.add('day-header-weekend');
+            if (i === 5 || i === 6) dh.classList.add('day-header-weekend');
             dh.textContent = name;
             headersEl.appendChild(dh);
         });
@@ -417,7 +416,7 @@ const App = (() => {
             const gregDate = `${day.gregorian.day}/${day.gregorian.month}/${day.gregorian.year}`;
             cell.title = `${H.dayName(day.dayOfWeek)} — ${gregDate}`;
 
-            if (day.dayOfWeek === 6 || day.dayOfWeek === 0) cell.classList.add('weekend-col');
+            if ((idx % 7) === 5 || (idx % 7) === 6) cell.classList.add('weekend-col');
             if (day.dayOfWeek === 6) cell.classList.add('friday-col');
 
             cell.addEventListener('click', (e) => selectDay(day, e));
