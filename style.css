@@ -261,7 +261,7 @@ body::before {
     font-weight: 600;
 }
 
-.day-header.day-header-last {
+.day-header.day-header-weekend {
     color: var(--green-600);
     background: rgba(39, 166, 120, 0.08);
 }
@@ -321,8 +321,8 @@ body::before {
     line-height: 1;
 }
 
-/* يوم الجمعة */
-.calendar-cell.friday-col {
+/* نهاية الأسبوع (الجمعة والسبت) */
+.calendar-cell.weekend-col {
     background: rgba(39, 166, 120, 0.04);
 }
 

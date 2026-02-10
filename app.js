@@ -66,6 +66,8 @@ const App = (() => {
 
         // تصدير
         document.getElementById('export-title').textContent = H.t('exportTitle');
+        document.getElementById('export-hijri-label').textContent = H.t('hijri');
+        document.getElementById('export-greg-label').textContent = H.t('gregorian');
         document.getElementById('export-from-label').textContent = H.t('exportFrom');
         document.getElementById('export-to-label').textContent = H.t('exportTo');
         document.getElementById('export-from-month-lbl').textContent = H.t('exportMonth');
@@ -210,21 +212,38 @@ const App = (() => {
 
     // ─── تصدير iCal ─────────────────────────────────────────
     function setupExport() {
+        const radios = document.querySelectorAll('input[name="export-type"]');
+        radios.forEach(r => r.addEventListener('change', () => {
+            const type = document.querySelector('input[name="export-type"]:checked').value;
+            const now = new Date();
+            if (type === 'gregorian') {
+                document.getElementById('export-from-year').value = now.getFullYear();
+                document.getElementById('export-to-year').value = now.getFullYear();
+            } else {
+                const today = H.todayHijri();
+                document.getElementById('export-from-year').value = today.year;
+                document.getElementById('export-to-year').value = today.year;
+            }
+            document.getElementById('export-from-month').value = 1;
+            document.getElementById('export-to-month').value = 12;
+        }));
+
         document.getElementById('export-btn').addEventListener('click', () => {
             const fromM = parseInt(document.getElementById('export-from-month').value);
             const fromY = parseInt(document.getElementById('export-from-year').value);
             const toM = parseInt(document.getElementById('export-to-month').value);
             const toY = parseInt(document.getElementById('export-to-year').value);
+            const type = document.querySelector('input[name="export-type"]:checked').value;
 
             if (!fromM || !fromY || !toM || !toY) return;
             if (fromM < 1 || fromM > 12 || toM < 1 || toM > 12) return;
 
-            const ics = generateICS(fromY, fromM, toY, toM);
+            const ics = generateICS(fromY, fromM, toY, toM, type);
             downloadFile('hijri-calendar.ics', ics, 'text/calendar;charset=utf-8');
         });
     }
 
-    function generateICS(fromYear, fromMonth, toYear, toMonth) {
+    function generateICS(fromYear, fromMonth, toYear, toMonth, type) {
         const lines = [
             'BEGIN:VCALENDAR',
             'VERSION:2.0',
@@ -234,32 +253,36 @@ const App = (() => {
             'X-WR-TIMEZONE:UTC',
         ];
 
-        let y = fromYear, m = fromMonth;
-        while (y < toYear || (y === toYear && m <= toMonth)) {
-            const totalDays = H.daysInMonth(y, m);
-            for (let d = 1; d <= totalDays; d++) {
-                const jdn = H.hijriToJDN(y, m, d);
-                const greg = H.jdnToGregorian(jdn);
-                const gregNext = H.jdnToGregorian(jdn + 1);
+        let startJDN, endJDN;
+        if (type === 'hijri') {
+            startJDN = H.hijriToJDN(fromYear, fromMonth, 1);
+            endJDN = H.hijriToJDN(toYear, toMonth, H.daysInMonth(toYear, toMonth));
+        } else {
+            startJDN = H.gregorianToJDN(fromYear, fromMonth, 1);
+            const nextM = toMonth === 12 ? 1 : toMonth + 1;
+            const nextY = toMonth === 12 ? toYear + 1 : toYear;
+            endJDN = H.gregorianToJDN(nextY, nextM, 1) - 1;
+        }
 
-                const dtStart = pad4(greg.year) + pad2(greg.month) + pad2(greg.day);
-                const dtEnd = pad4(gregNext.year) + pad2(gregNext.month) + pad2(gregNext.day);
+        for (let jdn = startJDN; jdn <= endJDN; jdn++) {
+            const greg = H.jdnToGregorian(jdn);
+            const gregNext = H.jdnToGregorian(jdn + 1);
+            const hijri = H.jdnToHijri(jdn);
 
-                const hijriTitle = `${d} ${H.MONTH_NAMES_EN[m - 1]} ${y} AH`;
-                const hijriTitleAr = `${d} ${H.MONTH_NAMES[m - 1]} ${y} هـ`;
-                const uid = `hijri-${y}-${m}-${d}@al-tawfiqat`;
+            const dtStart = pad4(greg.year) + pad2(greg.month) + pad2(greg.day);
+            const dtEnd = pad4(gregNext.year) + pad2(gregNext.month) + pad2(gregNext.day);
 
-                lines.push('BEGIN:VEVENT');
-                lines.push(`DTSTART;VALUE=DATE:${dtStart}`);
-                lines.push(`DTEND;VALUE=DATE:${dtEnd}`);
-                lines.push(`SUMMARY:${hijriTitle}`);
-                lines.push(`DESCRIPTION:${hijriTitleAr}`);
-                lines.push(`UID:${uid}`);
-                lines.push('END:VEVENT');
-            }
+            const hijriTitle = `${hijri.day} ${H.MONTH_NAMES_EN[hijri.month - 1]} ${hijri.year} AH`;
+            const hijriTitleAr = `${hijri.day} ${H.MONTH_NAMES[hijri.month - 1]} ${hijri.year} هـ`;
+            const uid = `hijri-${hijri.year}-${hijri.month}-${hijri.day}@al-tawfiqat`;
 
-            m++;
-            if (m > 12) { m = 1; y++; }
+            lines.push('BEGIN:VEVENT');
+            lines.push(`DTSTART;VALUE=DATE:${dtStart}`);
+            lines.push(`DTEND;VALUE=DATE:${dtEnd}`);
+            lines.push(`SUMMARY:${hijriTitle}`);
+            lines.push(`DESCRIPTION:${hijriTitleAr}`);
+            lines.push(`UID:${uid}`);
+            lines.push('END:VEVENT');
         }
 
         lines.push('END:VCALENDAR');
@@ -358,7 +381,8 @@ const App = (() => {
         data.orderedDayNames.forEach((name, i) => {
             const dh = document.createElement('div');
             dh.className = 'day-header';
-            if (i === 6) dh.classList.add('day-header-last');
+            const dayIdx = (H.getWeekStart() + i) % 7;
+            if (dayIdx === 6 || dayIdx === 0) dh.classList.add('day-header-weekend');
             dh.textContent = name;
             headersEl.appendChild(dh);
         });
@@ -393,7 +417,8 @@ const App = (() => {
             const gregDate = `${day.gregorian.day}/${day.gregorian.month}/${day.gregorian.year}`;
             cell.title = `${H.dayName(day.dayOfWeek)} — ${gregDate}`;
 
-            if ((idx % 7) === 6) cell.classList.add('friday-col');
+            if (day.dayOfWeek === 6 || day.dayOfWeek === 0) cell.classList.add('weekend-col');
+            if (day.dayOfWeek === 6) cell.classList.add('friday-col');
 
             cell.addEventListener('click', (e) => selectDay(day, e));
             grid.appendChild(cell);
