@@ -52,6 +52,8 @@ const HijriCalendar = (() => {
     const ARABIC_DIGITS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
 
     function toArabicNumerals(num) {
+        // في الإنجليزية: دائماً أرقام عربية (0123)
+        if (currentLang === 'en') return String(num);
         const digits = numeralStyle === 'hindi' ? HINDI_DIGITS : ARABIC_DIGITS;
         return String(num).replace(/\d/g, d => digits[parseInt(d)]);
     }
