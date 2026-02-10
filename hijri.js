@@ -48,20 +48,13 @@ const HijriCalendar = (() => {
         astronomical: 'فلكي (اقتران القمر)',
     };
 
-    const HINDI_DIGITS = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
-    const ARABIC_DIGITS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-
     function toArabicNumerals(num) {
-        // في الإنجليزية: دائماً أرقام عربية (0123)
-        if (currentLang === 'en') return String(num);
-        const digits = numeralStyle === 'hindi' ? HINDI_DIGITS : ARABIC_DIGITS;
-        return String(num).replace(/\d/g, d => digits[parseInt(d)]);
+        return String(num);
     }
 
     // ─── الحالة ─────────────────────────────────────────────
     let currentMode = 'astronomical'; // الافتراضي: فلكي
     let weekStart = 0; // 0=السبت، 1=الأحد، 2=الإثنين
-    let numeralStyle = 'hindi'; // 'hindi' = ٠١٢٣ (الافتراضي)، 'arabic' = 0123
     let currentLang = 'ar'; // 'ar' أو 'en'
 
     // ─── الترجمة ─────────────────────────────────────────────
@@ -70,7 +63,6 @@ const HijriCalendar = (() => {
             title: 'التقويم الهجري',
             modeLabel: 'نمط الحساب', modeAstro: 'فلكي (اقتران القمر)', modeTab: 'حسابي (التوفيقات الإلهامية)',
             weekStartLabel: 'بداية الأسبوع', saturday: 'السبت', sunday: 'الأحد', monday: 'الإثنين',
-            numeralLabel: 'نمط الأرقام', numeralHindi: 'هندية (٠١٢٣٤٥)', numeralArabic: 'عربية (012345)',
             langLabel: 'Language', langAr: 'العربية', langEn: 'English',
             corrLabel: 'تصحيح الشهر الحالي', corrReset: 'إعادة', corrClearAll: 'مسح الكل',
             corrections: 'التصحيحات:', noCorrections: 'لا توجد تصحيحات',
@@ -90,12 +82,15 @@ const HijriCalendar = (() => {
             footer: 'إعداد عيسى بن راشد الشامسي — دولة الإمارات العربية المتحدة',
             version: 'الإصدار ١٫٠',
             credit: 'صُمم بواسطة Claude Code (Opus 4.6)',
+            exportTitle: 'تصدير إلى أجندة (iCal)',
+            exportFrom: 'من', exportTo: 'إلى',
+            exportBtn: 'تصدير .ics',
+            exportMonth: 'الشهر', exportYear: 'السنة',
         },
         en: {
             title: 'Hijri Calendar',
             modeLabel: 'Calculation Mode', modeAstro: 'Astronomical (Lunar Conjunction)', modeTab: 'Tabular (al-Tawfiqat al-Ilhamiyyah)',
             weekStartLabel: 'Week Start', saturday: 'Saturday', sunday: 'Sunday', monday: 'Monday',
-            numeralLabel: 'Numeral Style', numeralHindi: 'Hindi (٠١٢٣٤٥)', numeralArabic: 'Arabic (012345)',
             langLabel: 'Language', langAr: 'العربية', langEn: 'English',
             corrLabel: 'Month Correction', corrReset: 'Reset', corrClearAll: 'Clear All',
             corrections: 'Corrections:', noCorrections: 'No corrections',
@@ -115,6 +110,10 @@ const HijriCalendar = (() => {
             footer: 'By Eisa bin Rashid Al Shamsi — United Arab Emirates',
             version: 'Version 1.0',
             credit: 'Designed with Claude Code (Opus 4.6)',
+            exportTitle: 'Export to Calendar (iCal)',
+            exportFrom: 'From', exportTo: 'To',
+            exportBtn: 'Export .ics',
+            exportMonth: 'Month', exportYear: 'Year',
         }
     };
 
@@ -162,25 +161,6 @@ const HijriCalendar = (() => {
 
     function _saveWeekStart() {
         try { localStorage.setItem('hijri-weekstart', weekStart); }
-        catch (e) { /* ignore */ }
-    }
-
-    // ─── نمط الأرقام ─────────────────────────────────────────
-    function setNumeralStyle(style) {
-        if (style === 'hindi' || style === 'arabic') numeralStyle = style;
-    }
-
-    function getNumeralStyle() { return numeralStyle; }
-
-    function _loadNumeralStyle() {
-        try {
-            const v = localStorage.getItem('hijri-numerals');
-            if (v === 'hindi' || v === 'arabic') numeralStyle = v;
-        } catch (e) { /* ignore */ }
-    }
-
-    function _saveNumeralStyle() {
-        try { localStorage.setItem('hijri-numerals', numeralStyle); }
         catch (e) { /* ignore */ }
     }
 
@@ -733,7 +713,6 @@ const HijriCalendar = (() => {
     _loadCorrections();
     _loadMode();
     _loadWeekStart();
-    _loadNumeralStyle();
     _loadLang();
 
     // ─── الواجهة العامة ─────────────────────────────────────
@@ -745,9 +724,6 @@ const HijriCalendar = (() => {
 
         // بداية الأسبوع
         setWeekStart, getWeekStart, _saveWeekStart, weekOfYear,
-
-        // نمط الأرقام
-        setNumeralStyle, getNumeralStyle, _saveNumeralStyle,
 
         // اللغة
         t, setLang, getLang, _saveLang,
@@ -766,7 +742,7 @@ const HijriCalendar = (() => {
 
         // مساعدات
         toArabicNumerals,
-        MONTH_NAMES, DAY_NAMES, GREGORIAN_MONTH_NAMES,
+        MONTH_NAMES, MONTH_NAMES_EN, DAY_NAMES, GREGORIAN_MONTH_NAMES,
         EPOCH_JDN
     };
 })();

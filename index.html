@@ -48,15 +48,6 @@
                 </select>
             </div>
 
-            <!-- نمط الأرقام -->
-            <div class="tool-group">
-                <label class="tool-label" id="lbl-numeral"></label>
-                <select id="numeral-select" class="mode-select">
-                    <option value="hindi" id="opt-hindi"></option>
-                    <option value="arabic" id="opt-arabic"></option>
-                </select>
-            </div>
-
             <!-- اللغة -->
             <div class="tool-group">
                 <label class="tool-label" id="lbl-lang"></label>
@@ -144,6 +135,42 @@
         <!-- شريط المعلومات -->
         <div class="info-bar" id="selected-info"></div>
 
+    </div>
+
+    <!-- ═══ تصدير iCal ═══ -->
+    <div class="goto-card">
+        <div class="goto-header" id="export-title"></div>
+        <div class="goto-body">
+            <div class="export-row">
+                <div class="export-range">
+                    <span class="export-label" id="export-from-label"></span>
+                    <div class="export-fields">
+                        <div class="input-group">
+                            <label id="export-from-month-lbl"></label>
+                            <input type="number" id="export-from-month" min="1" max="12" value="1">
+                        </div>
+                        <div class="input-group">
+                            <label id="export-from-year-lbl"></label>
+                            <input type="number" id="export-from-year" value="1447">
+                        </div>
+                    </div>
+                </div>
+                <div class="export-range">
+                    <span class="export-label" id="export-to-label"></span>
+                    <div class="export-fields">
+                        <div class="input-group">
+                            <label id="export-to-month-lbl"></label>
+                            <input type="number" id="export-to-month" min="1" max="12" value="12">
+                        </div>
+                        <div class="input-group">
+                            <label id="export-to-year-lbl"></label>
+                            <input type="number" id="export-to-year" value="1447">
+                        </div>
+                    </div>
+                </div>
+                <button class="convert-btn export-btn" id="export-btn"></button>
+            </div>
+        </div>
     </div>
 
     <!-- ═══ عن المنهج ═══ -->

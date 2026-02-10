@@ -1,6 +1,6 @@
 /**
  * تطبيق التقويم الهجري — الواجهة
- * المستوى 2 (فلكي) كافتراضي + تصحيح يدوي + تعدد اللغات
+ * المستوى 2 (فلكي) كافتراضي + تصحيح يدوي + تعدد اللغات + تصدير iCal
  */
 
 const App = (() => {
@@ -17,10 +17,10 @@ const App = (() => {
         setupNavigation();
         setupModeSelector();
         setupWeekStartSelector();
-        setupNumeralSelector();
         setupLangSelector();
         setupCorrectionControls();
         setupGoToDate();
+        setupExport();
         applyLabels();
         renderCalendar();
         renderTodayInfo();
@@ -44,9 +44,6 @@ const App = (() => {
         document.getElementById('opt-sat').textContent = H.t('saturday');
         document.getElementById('opt-sun').textContent = H.t('sunday');
         document.getElementById('opt-mon').textContent = H.t('monday');
-        document.getElementById('lbl-numeral').textContent = H.t('numeralLabel');
-        document.getElementById('opt-hindi').textContent = H.t('numeralHindi');
-        document.getElementById('opt-arabic').textContent = H.t('numeralArabic');
         document.getElementById('lbl-lang').textContent = H.t('langLabel');
         document.getElementById('opt-lang-ar').textContent = H.t('langAr');
         document.getElementById('opt-lang-en').textContent = H.t('langEn');
@@ -66,6 +63,16 @@ const App = (() => {
         document.getElementById('goto-lbl-month').textContent = H.t('month');
         document.getElementById('goto-lbl-year').textContent = H.t('year');
         document.getElementById('goto-btn').textContent = H.t('go');
+
+        // تصدير
+        document.getElementById('export-title').textContent = H.t('exportTitle');
+        document.getElementById('export-from-label').textContent = H.t('exportFrom');
+        document.getElementById('export-to-label').textContent = H.t('exportTo');
+        document.getElementById('export-from-month-lbl').textContent = H.t('exportMonth');
+        document.getElementById('export-from-year-lbl').textContent = H.t('exportYear');
+        document.getElementById('export-to-month-lbl').textContent = H.t('exportMonth');
+        document.getElementById('export-to-year-lbl').textContent = H.t('exportYear');
+        document.getElementById('export-btn').textContent = H.t('exportBtn');
 
         // التنقل
         document.getElementById('today-btn').textContent = H.t('todayBtn');
@@ -164,17 +171,6 @@ const App = (() => {
         });
     }
 
-    // ─── اختيار نمط الأرقام ──────────────────────────────────
-    function setupNumeralSelector() {
-        const select = document.getElementById('numeral-select');
-        select.value = H.getNumeralStyle();
-        select.addEventListener('change', () => {
-            H.setNumeralStyle(select.value);
-            H._saveNumeralStyle();
-            refreshUI();
-        });
-    }
-
     // ─── اختيار اللغة ───────────────────────────────────────
     function setupLangSelector() {
         const select = document.getElementById('lang-select');
@@ -212,6 +208,79 @@ const App = (() => {
         });
     }
 
+    // ─── تصدير iCal ─────────────────────────────────────────
+    function setupExport() {
+        document.getElementById('export-btn').addEventListener('click', () => {
+            const fromM = parseInt(document.getElementById('export-from-month').value);
+            const fromY = parseInt(document.getElementById('export-from-year').value);
+            const toM = parseInt(document.getElementById('export-to-month').value);
+            const toY = parseInt(document.getElementById('export-to-year').value);
+
+            if (!fromM || !fromY || !toM || !toY) return;
+            if (fromM < 1 || fromM > 12 || toM < 1 || toM > 12) return;
+
+            const ics = generateICS(fromY, fromM, toY, toM);
+            downloadFile('hijri-calendar.ics', ics, 'text/calendar;charset=utf-8');
+        });
+    }
+
+    function generateICS(fromYear, fromMonth, toYear, toMonth) {
+        const lines = [
+            'BEGIN:VCALENDAR',
+            'VERSION:2.0',
+            'PRODID:-//Hijri Calendar//AL-TAWFIQAT//EN',
+            'CALSCALE:GREGORIAN',
+            'X-WR-CALNAME:Hijri Calendar',
+            'X-WR-TIMEZONE:UTC',
+        ];
+
+        let y = fromYear, m = fromMonth;
+        while (y < toYear || (y === toYear && m <= toMonth)) {
+            const totalDays = H.daysInMonth(y, m);
+            for (let d = 1; d <= totalDays; d++) {
+                const jdn = H.hijriToJDN(y, m, d);
+                const greg = H.jdnToGregorian(jdn);
+                const gregNext = H.jdnToGregorian(jdn + 1);
+
+                const dtStart = pad4(greg.year) + pad2(greg.month) + pad2(greg.day);
+                const dtEnd = pad4(gregNext.year) + pad2(gregNext.month) + pad2(gregNext.day);
+
+                const hijriTitle = `${d} ${H.MONTH_NAMES_EN[m - 1]} ${y} AH`;
+                const hijriTitleAr = `${d} ${H.MONTH_NAMES[m - 1]} ${y} هـ`;
+                const uid = `hijri-${y}-${m}-${d}@al-tawfiqat`;
+
+                lines.push('BEGIN:VEVENT');
+                lines.push(`DTSTART;VALUE=DATE:${dtStart}`);
+                lines.push(`DTEND;VALUE=DATE:${dtEnd}`);
+                lines.push(`SUMMARY:${hijriTitle}`);
+                lines.push(`DESCRIPTION:${hijriTitleAr}`);
+                lines.push(`UID:${uid}`);
+                lines.push('END:VEVENT');
+            }
+
+            m++;
+            if (m > 12) { m = 1; y++; }
+        }
+
+        lines.push('END:VCALENDAR');
+        return lines.join('\r\n');
+    }
+
+    function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+    function pad4(n) { let s = '' + n; while (s.length < 4) s = '0' + s; return s; }
+
+    function downloadFile(filename, content, mimeType) {
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
     // ─── أدوات التصحيح ──────────────────────────────────────
     function setupCorrectionControls() {
         document.getElementById('corr-plus').addEventListener('click', () => {
@@ -245,11 +314,11 @@ const App = (() => {
         const corr = H.getCorrection(currentYear, currentMonth);
         const corrEl = document.getElementById('corr-value');
         if (corr === 0) {
-            corrEl.textContent = H.toArabicNumerals(0);
+            corrEl.textContent = '0';
             corrEl.className = 'corr-value';
         } else {
             const sign = corr > 0 ? '+' : '';
-            corrEl.textContent = H.toArabicNumerals(sign + corr);
+            corrEl.textContent = sign + corr;
             corrEl.className = 'corr-value corr-active';
         }
 
@@ -262,7 +331,7 @@ const App = (() => {
             listEl.innerHTML = keys.map(key => {
                 const [y, m] = key.split('-').map(Number);
                 const sign = all[key] > 0 ? '+' : '';
-                return `<span class="corr-tag">${H.monthName(m-1)} ${H.toArabicNumerals(y)}: ${sign}${H.toArabicNumerals(all[key])}</span>`;
+                return `<span class="corr-tag">${H.monthName(m-1)} ${y}: ${sign}${all[key]}</span>`;
             }).join(' ');
         }
     }
@@ -272,7 +341,7 @@ const App = (() => {
         const data = H.getMonthData(currentYear, currentMonth);
 
         document.getElementById('month-title').textContent =
-            `${data.monthName} ${H.toArabicNumerals(data.year)} ${H.t('hSuffix')}`;
+            `${data.monthName} ${data.year} ${H.t('hSuffix')}`;
 
         document.getElementById('gregorian-range').textContent = data.gregorianRange;
 
@@ -302,7 +371,7 @@ const App = (() => {
             if (idx % 7 === 0) {
                 const weekCell = document.createElement('div');
                 weekCell.className = 'week-number';
-                weekCell.textContent = H.toArabicNumerals(day.weekNumber);
+                weekCell.textContent = day.weekNumber;
                 grid.appendChild(weekCell);
             }
 
@@ -313,12 +382,12 @@ const App = (() => {
 
             const hijriNum = document.createElement('span');
             hijriNum.className = 'hijri-day';
-            hijriNum.textContent = H.toArabicNumerals(day.hijriDay);
+            hijriNum.textContent = day.hijriDay;
             cell.appendChild(hijriNum);
 
             const gregNum = document.createElement('span');
             gregNum.className = 'greg-day';
-            gregNum.textContent = H.toArabicNumerals(day.gregorian.day);
+            gregNum.textContent = day.gregorian.day;
             cell.appendChild(gregNum);
 
             const gregDate = `${day.gregorian.day}/${day.gregorian.month}/${day.gregorian.year}`;
@@ -342,10 +411,10 @@ const App = (() => {
         const dow = H.dayOfWeek(jdn);
 
         document.getElementById('today-hijri').textContent =
-            `${H.dayName(dow)}، ${H.toArabicNumerals(today.day)} ${H.monthName(today.month-1)} ${H.toArabicNumerals(today.year)} ${H.t('hSuffix')}`;
+            `${H.dayName(dow)}، ${today.day} ${H.monthName(today.month-1)} ${today.year} ${H.t('hSuffix')}`;
 
         document.getElementById('today-gregorian').textContent =
-            `${H.toArabicNumerals(now.getDate())} ${H.gregMonthName(now.getMonth())} ${H.toArabicNumerals(now.getFullYear())}${H.t('gSuffix')}`;
+            `${now.getDate()} ${H.gregMonthName(now.getMonth())} ${now.getFullYear()}${H.t('gSuffix')}`;
     }
 
     // ─── اختيار يوم ─────────────────────────────────────────
@@ -365,9 +434,9 @@ const App = (() => {
         const greg = day.gregorian;
         const hijriFromJDN = H.jdnToHijri(day.jdn);
         infoBar.innerHTML =
-            `${H.dayName(day.dayOfWeek)}، ${H.toArabicNumerals(hijriFromJDN.day)} ${H.monthName(hijriFromJDN.month-1)} ${H.toArabicNumerals(hijriFromJDN.year)} ${H.t('hSuffix')}` +
+            `${H.dayName(day.dayOfWeek)}، ${hijriFromJDN.day} ${H.monthName(hijriFromJDN.month-1)} ${hijriFromJDN.year} ${H.t('hSuffix')}` +
             ` — ` +
-            `${H.toArabicNumerals(greg.day)} ${H.gregMonthName(greg.month-1)} ${H.toArabicNumerals(greg.year)}${H.t('gSuffix')}`;
+            `${greg.day} ${H.gregMonthName(greg.month-1)} ${greg.year}${H.t('gSuffix')}`;
     }
 
     return { init };

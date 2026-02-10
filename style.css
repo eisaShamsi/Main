@@ -591,6 +591,38 @@ body::before {
     accent-color: var(--green-600);
 }
 
+/* ─── تصدير iCal ─────────────────────────────────────────── */
+.export-row {
+    display: flex;
+    gap: 16px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+}
+
+.export-range {
+    flex: 1;
+    min-width: 160px;
+}
+
+.export-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--green-700);
+    margin-bottom: 6px;
+}
+
+.export-fields {
+    display: flex;
+    gap: 8px;
+}
+
+.export-btn {
+    align-self: flex-end;
+    margin-bottom: 0;
+    white-space: nowrap;
+}
+
 .input-row {
     display: flex;
     gap: 8px;
