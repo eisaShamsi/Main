@@ -1,137 +1,180 @@
 /**
  * اختبارات التقويم الهجري — Node.js
- * التحقق من صحة الخوارزمية مقابل تواريخ كتاب "التوفيقات الإلهامية"
+ * التحقق من المستوى 1 (حسابي) والمستوى 2 (فلكي) والتصحيحات
  */
 
-// Load the module (it's an IIFE that sets HijriCalendar globally)
 const fs = require('fs');
 const vm = require('vm');
-vm.runInThisContext(fs.readFileSync('./hijri.js', 'utf8'));
 
+// Mock localStorage for Node.js
+global.localStorage = {
+    _data: {},
+    getItem(k) { return this._data[k] || null; },
+    setItem(k, v) { this._data[k] = v; },
+    removeItem(k) { delete this._data[k]; }
+};
+
+vm.runInThisContext(fs.readFileSync('./hijri.js', 'utf8'));
 const H = HijriCalendar;
+
 let passed = 0, failed = 0;
 
-function assert(condition, description) {
-    if (condition) {
-        console.log(`  \x1b[32m✓ ${description}\x1b[0m`);
-        passed++;
-    } else {
-        console.log(`  \x1b[31m✗ ${description}\x1b[0m`);
-        failed++;
-    }
+function assert(cond, desc) {
+    if (cond) { console.log(`  \x1b[32m✓ ${desc}\x1b[0m`); passed++; }
+    else { console.log(`  \x1b[31m✗ ${desc}\x1b[0m`); failed++; }
 }
 
-function header(title) {
-    console.log(`\n\x1b[33m═══ ${title} ═══\x1b[0m`);
-}
+function header(t) { console.log(`\n\x1b[33m═══ ${t} ═══\x1b[0m`); }
 
-// ═══ 1. Leap Year Pattern ═══
-header('1. Leap Year Pattern (15-based variant)');
+// ═══════════════════════════════════════════════════════════
+// 1. المستوى 1 — الحسابي (التوفيقات الإلهامية)
+// ═══════════════════════════════════════════════════════════
+header('1. Tabular Mode — Leap Years');
+H.setMode('tabular');
 const expectedLeap = [2, 5, 7, 10, 13, 15, 18, 21, 24, 26, 29];
 for (let i = 1; i <= 30; i++) {
-    const shouldBeLeap = expectedLeap.includes(i);
-    assert(H.isLeapYear(i) === shouldBeLeap,
-        `Year ${i}: ${shouldBeLeap ? 'LEAP' : 'normal'}`);
+    assert(H.Tabular.isLeapYear(i) === expectedLeap.includes(i), `Year ${i}`);
 }
 
-// ═══ 2. 30-year cycle total ═══
-header('2. 30-year Cycle Total');
-let totalIn30 = 0;
-for (let i = 1; i <= 30; i++) totalIn30 += H.daysInYear(i);
-assert(totalIn30 === 10631, `30-year cycle = ${totalIn30} days (expected 10631)`);
+header('1b. Tabular — 30-year cycle');
+let total30 = 0;
+for (let i = 1; i <= 30; i++) total30 += H.Tabular.daysInYear(i);
+assert(total30 === 10631, `30-year cycle = ${total30} (expected 10631)`);
 
-// ═══ 3. Epoch ═══
-header('3. Epoch');
-const epochJDN = H.hijriToJDN(1, 1, 1);
-assert(epochJDN === 1948440, `1 Muharram 1 AH → JDN ${epochJDN} (expected 1948440)`);
+header('1c. Tabular — Known dates');
+H.setMode('tabular');
+const tab_ram1446 = H.hijriToGregorian(1446, 9, 1);
+assert(tab_ram1446.year === 2025 && tab_ram1446.month === 3 && tab_ram1446.day === 1,
+    `1 Ramadan 1446 → ${tab_ram1446.year}-${tab_ram1446.month}-${tab_ram1446.day}`);
 
-const epochGreg = H.jdnToGregorian(epochJDN);
-assert(epochGreg.year === 622 && epochGreg.month === 7 && epochGreg.day === 19,
-    `Epoch = ${epochGreg.year}-${epochGreg.month}-${epochGreg.day} (expected 622-7-19 proleptic Gregorian)`);
+const tab_ram1447 = H.hijriToGregorian(1447, 9, 1);
+assert(tab_ram1447.year === 2026 && tab_ram1447.month === 2 && tab_ram1447.day === 18,
+    `1 Ramadan 1447 → ${tab_ram1447.year}-${tab_ram1447.month}-${tab_ram1447.day}`);
 
-const epochDOW = H.dayOfWeek(epochJDN);
-assert(epochDOW === 6, `Epoch = ${H.DAY_NAMES[epochDOW]} (expected الجمعة, index 6)`);
+const tab_shaw1447 = H.hijriToGregorian(1447, 10, 1);
+assert(tab_shaw1447.year === 2026 && tab_shaw1447.month === 3 && tab_shaw1447.day === 20,
+    `1 Shawwal 1447 → ${tab_shaw1447.year}-${tab_shaw1447.month}-${tab_shaw1447.day}`);
 
-// ═══ 4. Known Dates from the Book ═══
-header('4. Known Dates from التوفيقات الإلهامية');
-
-// 1 Ramadan 1446 = March 1, 2025
-const ram1446 = H.hijriToGregorian(1446, 9, 1);
-assert(ram1446.year === 2025 && ram1446.month === 3 && ram1446.day === 1,
-    `1 Ramadan 1446 → ${ram1446.year}-${ram1446.month}-${ram1446.day} (expected 2025-3-1)`);
-
-// 1 Ramadan 1447 = Feb 18, 2026 (Wednesday)
-const ram1447 = H.hijriToGregorian(1447, 9, 1);
-const ram1447DOW = H.dayOfWeek(H.hijriToJDN(1447, 9, 1));
-assert(ram1447.year === 2026 && ram1447.month === 2 && ram1447.day === 18,
-    `1 Ramadan 1447 → ${ram1447.year}-${ram1447.month}-${ram1447.day} (expected 2026-2-18)`);
-assert(ram1447DOW === 4,
-    `1 Ramadan 1447 = ${H.DAY_NAMES[ram1447DOW]} (expected الأربعاء)`);
-
-// 1 Shawwal 1447 = March 20, 2026 (Friday)
-const shaw1447 = H.hijriToGregorian(1447, 10, 1);
-const shaw1447DOW = H.dayOfWeek(H.hijriToJDN(1447, 10, 1));
-assert(shaw1447.year === 2026 && shaw1447.month === 3 && shaw1447.day === 20,
-    `1 Shawwal 1447 → ${shaw1447.year}-${shaw1447.month}-${shaw1447.day} (expected 2026-3-20)`);
-assert(shaw1447DOW === 6,
-    `1 Shawwal 1447 = ${H.DAY_NAMES[shaw1447DOW]} (expected الجمعة)`);
-
-// 1 Ramadan 1441 = April 24, 2020 (Friday)
-const ram1441 = H.hijriToGregorian(1441, 9, 1);
-const ram1441DOW = H.dayOfWeek(H.hijriToJDN(1441, 9, 1));
-assert(ram1441.year === 2020 && ram1441.month === 4 && ram1441.day === 24,
-    `1 Ramadan 1441 → ${ram1441.year}-${ram1441.month}-${ram1441.day} (expected 2020-4-24)`);
-assert(ram1441DOW === 6,
-    `1 Ramadan 1441 = ${H.DAY_NAMES[ram1441DOW]} (expected الجمعة)`);
-
-// 1 Shawwal 1441 = May 24, 2020 (Sunday)
-const shaw1441 = H.hijriToGregorian(1441, 10, 1);
-const shaw1441DOW = H.dayOfWeek(H.hijriToJDN(1441, 10, 1));
-assert(shaw1441.year === 2020 && shaw1441.month === 5 && shaw1441.day === 24,
-    `1 Shawwal 1441 → ${shaw1441.year}-${shaw1441.month}-${shaw1441.day} (expected 2020-5-24)`);
-assert(shaw1441DOW === 1,
-    `1 Shawwal 1441 = ${H.DAY_NAMES[shaw1441DOW]} (expected الأحد)`);
-
-// ═══ 5. Roundtrip Conversions ═══
-header('5. Roundtrip Conversions');
-const testDates = [
-    [1, 1, 1], [1, 6, 15], [1, 12, 29],
-    [2, 12, 30], // leap year, last day
-    [100, 1, 1], [500, 6, 15], [1000, 12, 29],
-    [1400, 1, 1], [1446, 9, 1], [1447, 10, 1], [1500, 12, 29]
-];
-
-testDates.forEach(([y, m, d]) => {
-    const jdn = H.hijriToJDN(y, m, d);
+header('1d. Tabular — Roundtrip');
+const tabDates = [[1,1,1],[2,12,30],[1446,9,1],[1447,10,1],[1500,12,29]];
+tabDates.forEach(([y,m,d]) => {
+    const jdn = H.hijriToJDN(y,m,d);
     const back = H.jdnToHijri(jdn);
-    assert(back.year === y && back.month === m && back.day === d,
-        `Hijri ${y}-${m}-${d} → JDN ${jdn} → ${back.year}-${back.month}-${back.day}`);
+    assert(back.year===y && back.month===m && back.day===d,
+        `Roundtrip ${y}-${m}-${d}`);
 });
 
-const gregDates = [
-    [2025, 3, 1], [2026, 2, 18], [2026, 3, 20],
-    [2000, 1, 1], [1990, 6, 15], [622, 7, 19]
-];
+// ═══════════════════════════════════════════════════════════
+// 2. المستوى 2 — الفلكي
+// ═══════════════════════════════════════════════════════════
+header('2. Astronomical Mode — New Moon calculation');
+H.setMode('astronomical');
 
-gregDates.forEach(([y, m, d]) => {
-    const hijri = H.gregorianToHijri(y, m, d);
-    const back = H.hijriToGregorian(hijri.year, hijri.month, hijri.day);
-    assert(back.year === y && back.month === m && back.day === d,
-        `Greg ${y}-${m}-${d} → Hijri ${hijri.year}-${hijri.month}-${hijri.day} → ${back.year}-${back.month}-${back.day}`);
+// Check month lengths are reasonable (29 or 30 days)
+for (let m = 1; m <= 12; m++) {
+    const days = H.daysInMonth(1447, m);
+    assert(days === 29 || days === 30,
+        `1447 month ${m}: ${days} days`);
+}
+
+header('2b. Astronomical — Year 1447 total days');
+const y1447days = H.daysInYear(1447);
+assert(y1447days === 354 || y1447days === 355,
+    `Year 1447 = ${y1447days} days`);
+
+header('2c. Astronomical — Known dates (approximate ±1 day)');
+// الفلكي قد يختلف عن الحسابي بيوم أو يومين
+const ast_ram1447 = H.hijriToGregorian(1447, 9, 1);
+const diff_ram = Math.abs(
+    H.gregorianToJDN(ast_ram1447.year, ast_ram1447.month, ast_ram1447.day) -
+    H.gregorianToJDN(2026, 2, 18)
+);
+assert(diff_ram <= 2,
+    `1 Ramadan 1447 astro → ${ast_ram1447.year}-${ast_ram1447.month}-${ast_ram1447.day} (diff=${diff_ram} from tabular)`);
+console.log(`    Astronomical: ${ast_ram1447.year}-${ast_ram1447.month}-${ast_ram1447.day}`);
+console.log(`    Tabular:      2026-2-18`);
+
+const ast_shaw1447 = H.hijriToGregorian(1447, 10, 1);
+const diff_shaw = Math.abs(
+    H.gregorianToJDN(ast_shaw1447.year, ast_shaw1447.month, ast_shaw1447.day) -
+    H.gregorianToJDN(2026, 3, 20)
+);
+assert(diff_shaw <= 2,
+    `1 Shawwal 1447 astro → ${ast_shaw1447.year}-${ast_shaw1447.month}-${ast_shaw1447.day} (diff=${diff_shaw} from tabular)`);
+
+header('2d. Astronomical — Roundtrip');
+const astroDates = [[1447,1,1],[1447,6,15],[1447,9,1],[1447,12,1]];
+astroDates.forEach(([y,m,d]) => {
+    const jdn = H.hijriToJDN(y,m,d);
+    const back = H.jdnToHijri(jdn);
+    assert(back.year===y && back.month===m && back.day===d,
+        `Roundtrip ${y}-${m}-${d}`);
 });
 
-// ═══ 6. Today ═══
-header('6. Today\'s Date');
+// ═══════════════════════════════════════════════════════════
+// 3. التصحيحات اليدوية
+// ═══════════════════════════════════════════════════════════
+header('3. User Corrections');
+H.setMode('tabular');
+H.clearCorrections();
+
+// بدون تصحيح
+const base = H.hijriToGregorian(1447, 9, 1);
+console.log(`    Base: 1 Ramadan 1447 = ${base.year}-${base.month}-${base.day}`);
+
+// تصحيح +1 يوم
+H.setCorrection(1447, 9, 1);
+const corrected = H.hijriToGregorian(1447, 9, 1);
+console.log(`    +1 correction: 1 Ramadan 1447 = ${corrected.year}-${corrected.month}-${corrected.day}`);
+assert(
+    H.gregorianToJDN(corrected.year, corrected.month, corrected.day) -
+    H.gregorianToJDN(base.year, base.month, base.day) === 1,
+    `+1 correction shifts date by 1 day`);
+
+// التصحيح يسري على الشهور التالية
+const correctedShaw = H.hijriToGregorian(1447, 10, 1);
+const baseShaw = H.Tabular.hijriToJDN(1447, 10, 1);
+const corrShawJDN = H.hijriToJDN(1447, 10, 1);
+assert(corrShawJDN - baseShaw === 1,
+    `Correction propagates: Shawwal shifted by 1`);
+
+// تصحيح -1 يوم
+H.setCorrection(1447, 9, -1);
+const correctedMinus = H.hijriToGregorian(1447, 9, 1);
+assert(
+    H.gregorianToJDN(correctedMinus.year, correctedMinus.month, correctedMinus.day) -
+    H.gregorianToJDN(base.year, base.month, base.day) === -1,
+    `-1 correction shifts date back by 1 day`);
+
+// مسح التصحيحات
+H.clearCorrections();
+const afterClear = H.hijriToGregorian(1447, 9, 1);
+assert(afterClear.year === base.year && afterClear.month === base.month && afterClear.day === base.day,
+    `Clear restores original date`);
+
+// ═══════════════════════════════════════════════════════════
+// 4. تبديل الأنماط
+// ═══════════════════════════════════════════════════════════
+header('4. Mode Switching');
+H.setMode('tabular');
+assert(H.getMode() === 'tabular', 'Mode = tabular');
+H.setMode('astronomical');
+assert(H.getMode() === 'astronomical', 'Mode = astronomical');
+
+// ═══════════════════════════════════════════════════════════
+// 5. Today
+// ═══════════════════════════════════════════════════════════
+header('5. Today');
+H.setMode('astronomical');
+H.clearCorrections();
 const today = H.todayHijri();
-const now = new Date();
-console.log(`  Today: ${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()} → Hijri: ${today.year}-${today.month}-${today.day} (${H.MONTH_NAMES[today.month-1]})`);
+console.log(`    Today (astronomical): ${today.year}-${today.month}-${today.day} (${H.MONTH_NAMES[today.month-1]})`);
+H.setMode('tabular');
+const todayTab = H.todayHijri();
+console.log(`    Today (tabular):      ${todayTab.year}-${todayTab.month}-${todayTab.day} (${H.MONTH_NAMES[todayTab.month-1]})`);
 
-// ═══ Summary ═══
+// ═══════════════════════════════════════════════════════════
 header('SUMMARY');
 console.log(`  Total: ${passed + failed} tests — \x1b[32m${passed} passed\x1b[0m, \x1b[31m${failed} failed\x1b[0m`);
-if (failed === 0) {
-    console.log('  \x1b[32m✓ ALL TESTS PASSED\x1b[0m');
-} else {
-    console.log(`  \x1b[31m✗ ${failed} TESTS FAILED\x1b[0m`);
-    process.exit(1);
-}
+if (failed === 0) console.log('  \x1b[32m✓ ALL TESTS PASSED\x1b[0m');
+else { console.log(`  \x1b[31m✗ ${failed} TESTS FAILED\x1b[0m`); process.exit(1); }

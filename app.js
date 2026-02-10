@@ -1,27 +1,29 @@
 /**
  * تطبيق التقويم الهجري — الواجهة
- * بناءً على معادلات كتاب "التوفيقات الإلهامية"
+ * المستوى 2 (فلكي) كافتراضي + تصحيح يدوي + وضع حسابي
  */
 
 const App = (() => {
     const H = HijriCalendar;
 
-    // الحالة الحالية
     let currentYear, currentMonth;
 
-    // ─── تهيئة التطبيق ──────────────────────────────────────
+    // ─── تهيئة ──────────────────────────────────────────────
     function init() {
         const today = H.todayHijri();
         currentYear = today.year;
         currentMonth = today.month;
 
         setupNavigation();
+        setupModeSelector();
         setupConverter();
+        setupCorrectionControls();
         renderCalendar();
         renderTodayInfo();
+        updateModeUI();
     }
 
-    // ─── إعداد التنقل ───────────────────────────────────────
+    // ─── التنقل ─────────────────────────────────────────────
     function setupNavigation() {
         document.getElementById('prev-month').addEventListener('click', () => {
             currentMonth--;
@@ -40,13 +42,12 @@ const App = (() => {
             currentYear = today.year;
             currentMonth = today.month;
             renderCalendar();
+            renderTodayInfo();
         });
 
-        // التنقل بلوحة المفاتيح
         document.addEventListener('keydown', (e) => {
-            if (e.target.tagName === 'INPUT') return;
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
             if (e.key === 'ArrowRight') {
-                // في RTL، السهم الأيمن = الشهر السابق
                 currentMonth--;
                 if (currentMonth < 1) { currentMonth = 12; currentYear--; }
                 renderCalendar();
@@ -58,7 +59,87 @@ const App = (() => {
         });
     }
 
-    // ─── إعداد محوّل التواريخ ────────────────────────────────
+    // ─── اختيار النمط ───────────────────────────────────────
+    function setupModeSelector() {
+        const select = document.getElementById('mode-select');
+        select.value = H.getMode();
+        select.addEventListener('change', () => {
+            H.setMode(select.value);
+            H._saveMode();
+            renderCalendar();
+            renderTodayInfo();
+            updateModeUI();
+        });
+    }
+
+    function updateModeUI() {
+        const select = document.getElementById('mode-select');
+        select.value = H.getMode();
+
+        const badge = document.getElementById('mode-badge');
+        badge.textContent = H.getMode() === 'astronomical' ? 'فلكي' : 'حسابي';
+        badge.className = 'mode-badge ' + (H.getMode() === 'astronomical' ? 'mode-astro' : 'mode-tab');
+
+        updateCorrectionDisplay();
+    }
+
+    // ─── أدوات التصحيح ──────────────────────────────────────
+    function setupCorrectionControls() {
+        document.getElementById('corr-plus').addEventListener('click', () => {
+            const current = H.getCorrection(currentYear, currentMonth);
+            H.setCorrection(currentYear, currentMonth, current + 1);
+            renderCalendar();
+            renderTodayInfo();
+        });
+
+        document.getElementById('corr-minus').addEventListener('click', () => {
+            const current = H.getCorrection(currentYear, currentMonth);
+            H.setCorrection(currentYear, currentMonth, current - 1);
+            renderCalendar();
+            renderTodayInfo();
+        });
+
+        document.getElementById('corr-reset').addEventListener('click', () => {
+            H.setCorrection(currentYear, currentMonth, 0);
+            renderCalendar();
+            renderTodayInfo();
+        });
+
+        document.getElementById('corr-clear-all').addEventListener('click', () => {
+            H.clearCorrections();
+            renderCalendar();
+            renderTodayInfo();
+        });
+    }
+
+    function updateCorrectionDisplay() {
+        const corr = H.getCorrection(currentYear, currentMonth);
+        const corrEl = document.getElementById('corr-value');
+        if (corr === 0) {
+            corrEl.textContent = '٠';
+            corrEl.className = 'corr-value';
+        } else {
+            const sign = corr > 0 ? '+' : '';
+            corrEl.textContent = H.toArabicNumerals(sign + corr);
+            corrEl.className = 'corr-value corr-active';
+        }
+
+        // عرض قائمة التصحيحات الحالية
+        const all = H.getAllCorrections();
+        const listEl = document.getElementById('corrections-list');
+        const keys = Object.keys(all).sort();
+        if (keys.length === 0) {
+            listEl.innerHTML = '<span class="corr-empty">لا توجد تصحيحات</span>';
+        } else {
+            listEl.innerHTML = keys.map(key => {
+                const [y, m] = key.split('-').map(Number);
+                const sign = all[key] > 0 ? '+' : '';
+                return `<span class="corr-tag">${H.MONTH_NAMES[m-1]} ${H.toArabicNumerals(y)}: ${sign}${H.toArabicNumerals(all[key])}</span>`;
+            }).join(' ');
+        }
+    }
+
+    // ─── محوّل التواريخ ─────────────────────────────────────
     function setupConverter() {
         document.getElementById('convert-to-gregorian').addEventListener('click', () => {
             const y = parseInt(document.getElementById('hijri-year-input').value);
@@ -108,20 +189,13 @@ const App = (() => {
     function renderCalendar() {
         const data = H.getMonthData(currentYear, currentMonth);
 
-        // عنوان الشهر
         document.getElementById('month-title').textContent =
             `${data.monthName} ${H.toArabicNumerals(data.year)} هـ`;
 
-        // النطاق الميلادي
         document.getElementById('gregorian-range').textContent = data.gregorianRange;
 
-        // مؤشر السنة الكبيسة
         const leapBadge = document.getElementById('leap-badge');
-        if (data.isLeapYear) {
-            leapBadge.style.display = 'inline-block';
-        } else {
-            leapBadge.style.display = 'none';
-        }
+        leapBadge.style.display = data.isLeapYear ? 'inline-block' : 'none';
 
         // شبكة التقويم
         const grid = document.getElementById('calendar-grid');
@@ -133,33 +207,28 @@ const App = (() => {
             if (day.isOtherMonth) cell.classList.add('other-month');
             if (day.isToday) cell.classList.add('today');
 
-            // اليوم الهجري
             const hijriNum = document.createElement('span');
             hijriNum.className = 'hijri-day';
             hijriNum.textContent = H.toArabicNumerals(day.hijriDay);
             cell.appendChild(hijriNum);
 
-            // اليوم الميلادي
             const gregNum = document.createElement('span');
             gregNum.className = 'greg-day';
             gregNum.textContent = H.toArabicNumerals(day.gregorian.day);
             cell.appendChild(gregNum);
 
-            // تلميح (tooltip)
             const gregDate = `${day.gregorian.day}/${day.gregorian.month}/${day.gregorian.year}`;
             cell.title = `${H.DAY_NAMES[day.dayOfWeek]} — ${gregDate}م`;
 
-            // النقر على الخلية
             cell.addEventListener('click', (e) => selectDay(day, e));
-
             grid.appendChild(cell);
         });
 
-        // تحديث شريط المعلومات
         updateInfoBar(null);
+        updateCorrectionDisplay();
     }
 
-    // ─── عرض معلومات اليوم ──────────────────────────────────
+    // ─── معلومات اليوم ──────────────────────────────────────
     function renderTodayInfo() {
         const today = H.todayHijri();
         const now = new Date();
@@ -176,13 +245,10 @@ const App = (() => {
     // ─── اختيار يوم ─────────────────────────────────────────
     function selectDay(day, e) {
         updateInfoBar(day);
-
-        // تحديث التمييز
         document.querySelectorAll('.calendar-cell.selected').forEach(el => el.classList.remove('selected'));
         e.currentTarget.classList.add('selected');
     }
 
-    // ─── تحديث شريط المعلومات ────────────────────────────────
     function updateInfoBar(day) {
         const infoBar = document.getElementById('selected-info');
         if (!day) {
@@ -201,5 +267,4 @@ const App = (() => {
     return { init };
 })();
 
-// تشغيل التطبيق عند تحميل الصفحة
 document.addEventListener('DOMContentLoaded', App.init);

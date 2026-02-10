@@ -27,6 +27,39 @@
             <div class="hijri-date" id="today-hijri"></div>
             <div class="greg-date" id="today-gregorian"></div>
         </div>
+        <span class="mode-badge mode-astro" id="mode-badge">فلكي</span>
+    </div>
+
+    <!-- ═══ شريط الأدوات ═══ -->
+    <div class="toolbar-card">
+        <div class="toolbar-row">
+            <!-- اختيار النمط -->
+            <div class="tool-group">
+                <label class="tool-label">نمط الحساب</label>
+                <select id="mode-select" class="mode-select">
+                    <option value="astronomical">فلكي (اقتران القمر)</option>
+                    <option value="tabular">حسابي (التوفيقات الإلهامية)</option>
+                </select>
+            </div>
+
+            <!-- التصحيح اليدوي -->
+            <div class="tool-group">
+                <label class="tool-label">تصحيح الشهر الحالي</label>
+                <div class="corr-controls">
+                    <button class="corr-btn" id="corr-minus" title="إنقاص يوم">−</button>
+                    <span class="corr-value" id="corr-value">٠</span>
+                    <button class="corr-btn" id="corr-plus" title="إضافة يوم">+</button>
+                    <button class="corr-btn corr-reset-btn" id="corr-reset" title="إعادة تعيين هذا الشهر">إعادة</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- قائمة التصحيحات -->
+        <div class="corrections-row">
+            <span class="corrections-label">التصحيحات:</span>
+            <span id="corrections-list"><span class="corr-empty">لا توجد تصحيحات</span></span>
+            <button class="corr-btn corr-clear-btn" id="corr-clear-all">مسح الكل</button>
+        </div>
     </div>
 
     <!-- ═══ بطاقة التقويم ═══ -->
@@ -69,7 +102,6 @@
     <div class="converter-card">
         <div class="card-header">تحويل التواريخ</div>
 
-        <!-- هجري ← ميلادي -->
         <div class="converter-section">
             <h3>من الهجري إلى الميلادي</h3>
             <div class="input-row">
@@ -90,7 +122,6 @@
             <div class="conversion-result" id="conversion-result"></div>
         </div>
 
-        <!-- ميلادي ← هجري -->
         <div class="converter-section">
             <h3>من الميلادي إلى الهجري</h3>
             <div class="input-row">
@@ -112,24 +143,21 @@
         </div>
     </div>
 
-    <!-- ═══ عن المنهج الحسابي ═══ -->
+    <!-- ═══ عن المنهج ═══ -->
     <div class="about-card">
         <h3>المنهج الحسابي</h3>
         <p>
-            يعتمد هذا التقويم على نظام الدورة الثلاثينية المستخدم في كتاب «التوفيقات الإلهامية»
-            لمحمد مختار باشا المصري. في كل دورة من ثلاثين سنة هجرية توجد إحدى عشرة سنة
-            كبيسة (٣٥٥ يوماً) وتسع عشرة سنة بسيطة (٣٥٤ يوماً).
+            يعتمد هذا التقويم على منهجين:
+            <strong>الفلكي</strong> (الافتراضي) يحسب لحظة الاقتران الفلكي للقمر بدقة عالية باستخدام
+            خوارزمية Jean Meeus، ثم يحدد بداية الشهر بناءً على أول يوم بعد الاقتران.
+            <strong>الحسابي</strong> يستخدم نظام الدورة الثلاثينية من كتاب «التوفيقات الإلهامية».
         </p>
         <p>
             السنوات الكبيسة في الدورة: <strong>٢، ٥، ٧، ١٠، ١٣، ١٥، ١٨، ٢١، ٢٤، ٢٦، ٢٩</strong>
         </p>
         <p>
-            معادلة تحديد السنة الكبيسة:
-            <span class="formula">(11 &times; Y + 15) mod 30 &lt; 11</span>
-        </p>
-        <p>
-            الحقبة المدنية: ١ محرم ١ هـ = ١٦ يوليو ٦٢٢م (يولياني) = ١٩ يوليو ٦٢٢م (ميلادي).
-            مجموع أيام الدورة الثلاثينية = ١٠٬٦٣١ يوماً.
+            يمكن للمستخدم تصحيح أي شهر بإضافة أو إنقاص يوم. التصحيح يسري تلقائياً
+            على كل الشهور اللاحقة من نقطة التطبيق فصاعداً. التصحيحات تُحفظ في المتصفح.
         </p>
     </div>
 

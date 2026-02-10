@@ -382,6 +382,171 @@ body::before {
     justify-content: center;
 }
 
+/* ─── شارة النمط ─────────────────────────────────────────── */
+.mode-badge {
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: var(--radius-xl);
+    flex-shrink: 0;
+}
+
+.mode-badge.mode-astro {
+    background: var(--green-100);
+    color: var(--green-700);
+}
+
+.mode-badge.mode-tab {
+    background: var(--gold-100);
+    color: var(--gold-600);
+}
+
+/* ─── شريط الأدوات ───────────────────────────────────────── */
+.toolbar-card {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    padding: 14px 20px;
+    margin-bottom: 20px;
+}
+
+.toolbar-row {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+.tool-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+    min-width: 180px;
+}
+
+.tool-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--gray-500);
+}
+
+.mode-select {
+    font-family: var(--font-arabic);
+    font-size: 0.82rem;
+    padding: 7px 12px;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+    background: var(--gray-50);
+    color: var(--gray-800);
+    cursor: pointer;
+    transition: border-color 0.2s;
+    direction: rtl;
+}
+
+.mode-select:focus {
+    outline: none;
+    border-color: var(--green-500);
+}
+
+/* ─── أدوات التصحيح ──────────────────────────────────────── */
+.corr-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.corr-btn {
+    background: var(--gray-100);
+    border: 1px solid var(--gray-200);
+    color: var(--gray-700);
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    font-family: var(--font-arabic);
+}
+
+.corr-btn:hover {
+    background: var(--green-50);
+    border-color: var(--green-400);
+    color: var(--green-700);
+}
+
+.corr-reset-btn,
+.corr-clear-btn {
+    width: auto;
+    padding: 0 10px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.corr-clear-btn {
+    background: transparent;
+    border-color: transparent;
+    color: var(--gray-400);
+    font-size: 0.68rem;
+}
+
+.corr-clear-btn:hover {
+    color: #dc2626;
+    background: #fef2f2;
+    border-color: #fecaca;
+}
+
+.corr-value {
+    min-width: 32px;
+    text-align: center;
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--gray-400);
+}
+
+.corr-value.corr-active {
+    color: var(--gold-600);
+}
+
+/* ─── قائمة التصحيحات ────────────────────────────────────── */
+.corrections-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--gray-100);
+    flex-wrap: wrap;
+}
+
+.corrections-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--gray-500);
+    flex-shrink: 0;
+}
+
+.corr-tag {
+    display: inline-block;
+    background: var(--gold-100);
+    color: var(--gold-600);
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: var(--radius-xl);
+    margin: 1px;
+}
+
+.corr-empty {
+    font-size: 0.7rem;
+    color: var(--gray-400);
+}
+
 /* ─── بطاقة المحوّل ──────────────────────────────────────── */
 .converter-card {
     background: var(--white);
