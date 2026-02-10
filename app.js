@@ -17,6 +17,7 @@ const App = (() => {
         setupNavigation();
         setupModeSelector();
         setupWeekStartSelector();
+        setupNumeralSelector();
         setupConverter();
         setupCorrectionControls();
         renderCalendar();
@@ -95,6 +96,19 @@ const App = (() => {
         });
     }
 
+    // ─── اختيار نمط الأرقام ──────────────────────────────────
+    function setupNumeralSelector() {
+        const select = document.getElementById('numeral-select');
+        select.value = H.getNumeralStyle();
+        select.addEventListener('change', () => {
+            H.setNumeralStyle(select.value);
+            H._saveNumeralStyle();
+            renderCalendar();
+            renderTodayInfo();
+            updateCorrectionDisplay();
+        });
+    }
+
     // ─── أدوات التصحيح ──────────────────────────────────────
     function setupCorrectionControls() {
         document.getElementById('corr-plus').addEventListener('click', () => {
@@ -128,7 +142,7 @@ const App = (() => {
         const corr = H.getCorrection(currentYear, currentMonth);
         const corrEl = document.getElementById('corr-value');
         if (corr === 0) {
-            corrEl.textContent = '٠';
+            corrEl.textContent = H.toArabicNumerals(0);
             corrEl.className = 'corr-value';
         } else {
             const sign = corr > 0 ? '+' : '';

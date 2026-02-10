@@ -34,15 +34,18 @@ const HijriCalendar = (() => {
         astronomical: 'فلكي (اقتران القمر)',
     };
 
-    const ARABIC_DIGITS = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    const HINDI_DIGITS = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    const ARABIC_DIGITS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
 
     function toArabicNumerals(num) {
-        return String(num).replace(/\d/g, d => ARABIC_DIGITS[parseInt(d)]);
+        const digits = numeralStyle === 'hindi' ? HINDI_DIGITS : ARABIC_DIGITS;
+        return String(num).replace(/\d/g, d => digits[parseInt(d)]);
     }
 
     // ─── الحالة ─────────────────────────────────────────────
     let currentMode = 'astronomical'; // الافتراضي: فلكي
     let weekStart = 0; // 0=السبت، 1=الأحد، 2=الإثنين
+    let numeralStyle = 'hindi'; // 'hindi' = ٠١٢٣ (الافتراضي)، 'arabic' = 0123
 
     // تصحيحات المستخدم: { "1447-9": +1, "1447-10": -1 }
     // المفتاح = "سنة-شهر"، القيمة = عدد أيام الإزاحة
@@ -72,6 +75,25 @@ const HijriCalendar = (() => {
 
     function _saveWeekStart() {
         try { localStorage.setItem('hijri-weekstart', weekStart); }
+        catch (e) { /* ignore */ }
+    }
+
+    // ─── نمط الأرقام ─────────────────────────────────────────
+    function setNumeralStyle(style) {
+        if (style === 'hindi' || style === 'arabic') numeralStyle = style;
+    }
+
+    function getNumeralStyle() { return numeralStyle; }
+
+    function _loadNumeralStyle() {
+        try {
+            const v = localStorage.getItem('hijri-numerals');
+            if (v === 'hindi' || v === 'arabic') numeralStyle = v;
+        } catch (e) { /* ignore */ }
+    }
+
+    function _saveNumeralStyle() {
+        try { localStorage.setItem('hijri-numerals', numeralStyle); }
         catch (e) { /* ignore */ }
     }
 
@@ -624,6 +646,7 @@ const HijriCalendar = (() => {
     _loadCorrections();
     _loadMode();
     _loadWeekStart();
+    _loadNumeralStyle();
 
     // ─── الواجهة العامة ─────────────────────────────────────
     return {
@@ -634,6 +657,9 @@ const HijriCalendar = (() => {
 
         // بداية الأسبوع
         setWeekStart, getWeekStart, _saveWeekStart, weekOfYear,
+
+        // نمط الأرقام
+        setNumeralStyle, getNumeralStyle, _saveNumeralStyle,
 
         // التصحيحات
         setCorrection, getCorrection, clearCorrections, getAllCorrections,
