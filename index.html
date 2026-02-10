@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>التقويم الهجري — التوفيقات الإلهامية</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+
+    <!-- ═══ الرأس ═══ -->
+    <header class="header">
+        <span class="header-icon">&#x263D;</span>
+        <h1>التقويم الهجري</h1>
+        <p class="subtitle">
+            بناءً على معادلات كتاب «التوفيقات الإلهامية في مقارنة التواريخ الهجرية بالسنين الأفرنكية والقبطية»
+        </p>
+        <span class="book-ref">محمد مختار باشا المصري — ١٣١١هـ / ١٨٩٣م</span>
+    </header>
+
+    <!-- ═══ بطاقة اليوم ═══ -->
+    <div class="today-card">
+        <div class="date-icon">&#x263D;</div>
+        <div class="date-text">
+            <div class="hijri-date" id="today-hijri"></div>
+            <div class="greg-date" id="today-gregorian"></div>
+        </div>
+    </div>
+
+    <!-- ═══ بطاقة التقويم ═══ -->
+    <div class="calendar-card">
+
+        <!-- شريط التنقل -->
+        <div class="nav-bar">
+            <button class="nav-btn" id="next-month" title="الشهر التالي">&#x276E;</button>
+            <div class="month-info">
+                <div>
+                    <span class="month-title" id="month-title"></span>
+                    <span class="leap-badge" id="leap-badge">سنة كبيسة</span>
+                </div>
+                <div class="gregorian-range" id="gregorian-range"></div>
+            </div>
+            <button class="nav-btn" id="prev-month" title="الشهر السابق">&#x276F;</button>
+            <button class="today-nav-btn" id="today-btn">اليوم</button>
+        </div>
+
+        <!-- رؤوس الأيام -->
+        <div class="day-headers">
+            <div class="day-header">السبت</div>
+            <div class="day-header">الأحد</div>
+            <div class="day-header">الإثنين</div>
+            <div class="day-header">الثلاثاء</div>
+            <div class="day-header">الأربعاء</div>
+            <div class="day-header">الخميس</div>
+            <div class="day-header">الجمعة</div>
+        </div>
+
+        <!-- شبكة التقويم -->
+        <div class="calendar-grid" id="calendar-grid"></div>
+
+        <!-- شريط المعلومات -->
+        <div class="info-bar" id="selected-info">انقر على يوم لعرض تفاصيله</div>
+
+    </div>
+
+    <!-- ═══ محوّل التواريخ ═══ -->
+    <div class="converter-card">
+        <div class="card-header">تحويل التواريخ</div>
+
+        <!-- هجري ← ميلادي -->
+        <div class="converter-section">
+            <h3>من الهجري إلى الميلادي</h3>
+            <div class="input-row">
+                <div class="input-group">
+                    <label>اليوم</label>
+                    <input type="number" id="hijri-day-input" min="1" max="30" placeholder="١">
+                </div>
+                <div class="input-group">
+                    <label>الشهر</label>
+                    <input type="number" id="hijri-month-input" min="1" max="12" placeholder="١">
+                </div>
+                <div class="input-group">
+                    <label>السنة</label>
+                    <input type="number" id="hijri-year-input" min="1" max="1500" placeholder="١٤٤٧">
+                </div>
+                <button class="convert-btn" id="convert-to-gregorian">حوّل</button>
+            </div>
+            <div class="conversion-result" id="conversion-result"></div>
+        </div>
+
+        <!-- ميلادي ← هجري -->
+        <div class="converter-section">
+            <h3>من الميلادي إلى الهجري</h3>
+            <div class="input-row">
+                <div class="input-group">
+                    <label>اليوم</label>
+                    <input type="number" id="greg-day-input" min="1" max="31" placeholder="10">
+                </div>
+                <div class="input-group">
+                    <label>الشهر</label>
+                    <input type="number" id="greg-month-input" min="1" max="12" placeholder="2">
+                </div>
+                <div class="input-group">
+                    <label>السنة</label>
+                    <input type="number" id="greg-year-input" min="622" max="2100" placeholder="2026">
+                </div>
+                <button class="convert-btn" id="convert-to-hijri">حوّل</button>
+            </div>
+            <div class="conversion-result" id="conversion-result-2"></div>
+        </div>
+    </div>
+
+    <!-- ═══ عن المنهج الحسابي ═══ -->
+    <div class="about-card">
+        <h3>المنهج الحسابي</h3>
+        <p>
+            يعتمد هذا التقويم على نظام الدورة الثلاثينية المستخدم في كتاب «التوفيقات الإلهامية»
+            لمحمد مختار باشا المصري. في كل دورة من ثلاثين سنة هجرية توجد إحدى عشرة سنة
+            كبيسة (٣٥٥ يوماً) وتسع عشرة سنة بسيطة (٣٥٤ يوماً).
+        </p>
+        <p>
+            السنوات الكبيسة في الدورة: <strong>٢، ٥، ٧، ١٠، ١٣، ١٥، ١٨، ٢١، ٢٤، ٢٦، ٢٩</strong>
+        </p>
+        <p>
+            معادلة تحديد السنة الكبيسة:
+            <span class="formula">(11 &times; Y + 15) mod 30 &lt; 11</span>
+        </p>
+        <p>
+            الحقبة المدنية: ١ محرم ١ هـ = ١٦ يوليو ٦٢٢م (يولياني) = ١٩ يوليو ٦٢٢م (ميلادي).
+            مجموع أيام الدورة الثلاثينية = ١٠٬٦٣١ يوماً.
+        </p>
+    </div>
+
+</div>
+
+<script src="hijri.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
