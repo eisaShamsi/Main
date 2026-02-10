@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>التقويم الهجري — التوفيقات الإلهامية</title>
+    <title>التقويم الهجري</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -13,11 +13,7 @@
     <!-- ═══ الرأس ═══ -->
     <header class="header">
         <span class="header-icon">&#x263D;</span>
-        <h1>التقويم الهجري</h1>
-        <p class="subtitle">
-            بناءً على معادلات كتاب «التوفيقات الإلهامية في مقارنة التواريخ الهجرية بالسنين الأفرنكية والقبطية»
-        </p>
-        <span class="book-ref">محمد مختار باشا المصري — ١٣١١هـ / ١٨٩٣م</span>
+        <h1 id="app-title">التقويم الهجري</h1>
     </header>
 
     <!-- ═══ بطاقة اليوم ═══ -->
@@ -35,49 +31,90 @@
         <div class="toolbar-row">
             <!-- اختيار النمط -->
             <div class="tool-group">
-                <label class="tool-label">نمط الحساب</label>
+                <label class="tool-label" id="lbl-mode"></label>
                 <select id="mode-select" class="mode-select">
-                    <option value="astronomical">فلكي (اقتران القمر)</option>
-                    <option value="tabular">حسابي (التوفيقات الإلهامية)</option>
+                    <option value="astronomical" id="opt-astro"></option>
+                    <option value="tabular" id="opt-tab"></option>
                 </select>
             </div>
 
             <!-- بداية الأسبوع -->
             <div class="tool-group">
-                <label class="tool-label">بداية الأسبوع</label>
+                <label class="tool-label" id="lbl-weekstart"></label>
                 <select id="weekstart-select" class="mode-select">
-                    <option value="0">السبت</option>
-                    <option value="1">الأحد</option>
-                    <option value="2">الإثنين</option>
+                    <option value="0" id="opt-sat"></option>
+                    <option value="1" id="opt-sun"></option>
+                    <option value="2" id="opt-mon"></option>
                 </select>
             </div>
 
             <!-- نمط الأرقام -->
             <div class="tool-group">
-                <label class="tool-label">نمط الأرقام</label>
+                <label class="tool-label" id="lbl-numeral"></label>
                 <select id="numeral-select" class="mode-select">
-                    <option value="hindi">هندية (٠١٢٣٤٥)</option>
-                    <option value="arabic">عربية (012345)</option>
+                    <option value="hindi" id="opt-hindi"></option>
+                    <option value="arabic" id="opt-arabic"></option>
+                </select>
+            </div>
+
+            <!-- اللغة -->
+            <div class="tool-group">
+                <label class="tool-label" id="lbl-lang"></label>
+                <select id="lang-select" class="mode-select">
+                    <option value="ar" id="opt-lang-ar"></option>
+                    <option value="en" id="opt-lang-en"></option>
                 </select>
             </div>
 
             <!-- التصحيح اليدوي -->
             <div class="tool-group">
-                <label class="tool-label">تصحيح الشهر الحالي</label>
+                <label class="tool-label" id="lbl-corr"></label>
                 <div class="corr-controls">
-                    <button class="corr-btn" id="corr-minus" title="إنقاص يوم">−</button>
+                    <button class="corr-btn" id="corr-minus">−</button>
                     <span class="corr-value" id="corr-value">٠</span>
-                    <button class="corr-btn" id="corr-plus" title="إضافة يوم">+</button>
-                    <button class="corr-btn corr-reset-btn" id="corr-reset" title="إعادة تعيين هذا الشهر">إعادة</button>
+                    <button class="corr-btn" id="corr-plus">+</button>
+                    <button class="corr-btn corr-reset-btn" id="corr-reset"></button>
                 </div>
             </div>
         </div>
 
         <!-- قائمة التصحيحات -->
         <div class="corrections-row">
-            <span class="corrections-label">التصحيحات:</span>
-            <span id="corrections-list"><span class="corr-empty">لا توجد تصحيحات</span></span>
-            <button class="corr-btn corr-clear-btn" id="corr-clear-all">مسح الكل</button>
+            <span class="corrections-label" id="lbl-corrections"></span>
+            <span id="corrections-list"></span>
+            <button class="corr-btn corr-clear-btn" id="corr-clear-all"></button>
+        </div>
+    </div>
+
+    <!-- ═══ الانتقال إلى تاريخ ═══ -->
+    <div class="goto-card">
+        <div class="goto-header" id="goto-title"></div>
+        <div class="goto-body">
+            <div class="goto-toggle">
+                <label class="goto-radio">
+                    <input type="radio" name="goto-type" value="hijri" checked>
+                    <span id="goto-hijri-label"></span>
+                </label>
+                <label class="goto-radio">
+                    <input type="radio" name="goto-type" value="gregorian">
+                    <span id="goto-greg-label"></span>
+                </label>
+            </div>
+            <div class="input-row">
+                <div class="input-group">
+                    <label id="goto-lbl-day"></label>
+                    <input type="number" id="goto-day" min="1" max="30">
+                </div>
+                <div class="input-group">
+                    <label id="goto-lbl-month"></label>
+                    <input type="number" id="goto-month" min="1" max="12">
+                </div>
+                <div class="input-group">
+                    <label id="goto-lbl-year"></label>
+                    <input type="number" id="goto-year">
+                </div>
+                <button class="convert-btn" id="goto-btn"></button>
+            </div>
         </div>
     </div>
 
@@ -86,95 +123,42 @@
 
         <!-- شريط التنقل -->
         <div class="nav-bar">
-            <button class="nav-btn" id="next-month" title="الشهر التالي">&#x276E;</button>
+            <button class="nav-btn" id="next-month">&#x276E;</button>
             <div class="month-info">
                 <div>
                     <span class="month-title" id="month-title"></span>
-                    <span class="leap-badge" id="leap-badge">سنة كبيسة</span>
+                    <span class="leap-badge" id="leap-badge"></span>
                 </div>
                 <div class="gregorian-range" id="gregorian-range"></div>
             </div>
-            <button class="nav-btn" id="prev-month" title="الشهر السابق">&#x276F;</button>
-            <button class="today-nav-btn" id="today-btn">اليوم</button>
+            <button class="nav-btn" id="prev-month">&#x276F;</button>
+            <button class="today-nav-btn" id="today-btn"></button>
         </div>
 
-        <!-- رؤوس الأيام (تُولَّد ديناميكياً) -->
+        <!-- رؤوس الأيام -->
         <div class="day-headers" id="day-headers"></div>
 
         <!-- شبكة التقويم -->
         <div class="calendar-grid" id="calendar-grid"></div>
 
         <!-- شريط المعلومات -->
-        <div class="info-bar" id="selected-info">انقر على يوم لعرض تفاصيله</div>
+        <div class="info-bar" id="selected-info"></div>
 
-    </div>
-
-    <!-- ═══ محوّل التواريخ ═══ -->
-    <div class="converter-card">
-        <div class="card-header">تحويل التواريخ</div>
-
-        <div class="converter-section">
-            <h3>من الهجري إلى الميلادي</h3>
-            <div class="input-row">
-                <div class="input-group">
-                    <label>اليوم</label>
-                    <input type="number" id="hijri-day-input" min="1" max="30" placeholder="١">
-                </div>
-                <div class="input-group">
-                    <label>الشهر</label>
-                    <input type="number" id="hijri-month-input" min="1" max="12" placeholder="١">
-                </div>
-                <div class="input-group">
-                    <label>السنة</label>
-                    <input type="number" id="hijri-year-input" min="1" max="1500" placeholder="١٤٤٧">
-                </div>
-                <button class="convert-btn" id="convert-to-gregorian">حوّل</button>
-            </div>
-            <div class="conversion-result" id="conversion-result"></div>
-        </div>
-
-        <div class="converter-section">
-            <h3>من الميلادي إلى الهجري</h3>
-            <div class="input-row">
-                <div class="input-group">
-                    <label>اليوم</label>
-                    <input type="number" id="greg-day-input" min="1" max="31" placeholder="10">
-                </div>
-                <div class="input-group">
-                    <label>الشهر</label>
-                    <input type="number" id="greg-month-input" min="1" max="12" placeholder="2">
-                </div>
-                <div class="input-group">
-                    <label>السنة</label>
-                    <input type="number" id="greg-year-input" min="622" max="2100" placeholder="2026">
-                </div>
-                <button class="convert-btn" id="convert-to-hijri">حوّل</button>
-            </div>
-            <div class="conversion-result" id="conversion-result-2"></div>
-        </div>
     </div>
 
     <!-- ═══ عن المنهج ═══ -->
-    <div class="about-card">
-        <h3>المنهج الحسابي</h3>
-        <p>
-            يعتمد هذا التقويم على منهجين:
-            <strong>الفلكي</strong> (الافتراضي) يحسب لحظة الاقتران الفلكي للقمر بدقة عالية باستخدام
-            خوارزمية Jean Meeus، ثم يحدد بداية الشهر بناءً على أول يوم بعد الاقتران.
-            <strong>الحسابي</strong> يستخدم نظام الدورة الثلاثينية من كتاب «التوفيقات الإلهامية».
-        </p>
-        <p>
-            السنوات الكبيسة في الدورة: <strong>٢، ٥، ٧، ١٠، ١٣، ١٥، ١٨، ٢١، ٢٤، ٢٦، ٢٩</strong>
-        </p>
-        <p>
-            يمكن للمستخدم تصحيح أي شهر بإضافة أو إنقاص يوم. التصحيح يسري تلقائياً
-            على كل الشهور اللاحقة من نقطة التطبيق فصاعداً. التصحيحات تُحفظ في المتصفح.
-        </p>
+    <div class="about-card" id="about-card">
+        <h3 id="about-title"></h3>
+        <p id="about-p1"></p>
+        <p id="about-p2"></p>
+        <p id="about-p3"></p>
     </div>
 
     <!-- ═══ التذييل ═══ -->
     <footer class="site-footer">
-        إعداد عيسى بن راشد الشامسي — دولة الإمارات العربية المتحدة
+        <div id="footer-credit"></div>
+        <div class="footer-version" id="footer-version"></div>
+        <div class="footer-tool" id="footer-tool"></div>
     </footer>
 
 </div>

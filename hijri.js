@@ -18,15 +18,29 @@ const HijriCalendar = (() => {
         'رمضان', 'شوَّال', 'ذو القَعدة', 'ذو الحِجَّة'
     ];
 
+    const MONTH_NAMES_EN = [
+        'Muharram', 'Safar', "Rabi' I", "Rabi' II",
+        'Jumada I', 'Jumada II', 'Rajab', "Sha'ban",
+        'Ramadan', 'Shawwal', "Dhul-Qi'dah", 'Dhul-Hijjah'
+    ];
+
     const DAY_NAMES = [
         'السبت', 'الأحد', 'الإثنين', 'الثلاثاء',
         'الأربعاء', 'الخميس', 'الجمعة'
     ];
 
+    const DAY_NAMES_EN = ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+
     const GREGORIAN_MONTH_NAMES = [
         'يناير', 'فبراير', 'مارس', 'أبريل',
         'مايو', 'يونيو', 'يوليو', 'أغسطس',
         'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+    ];
+
+    const GREGORIAN_MONTH_NAMES_EN = [
+        'January', 'February', 'March', 'April',
+        'May', 'June', 'July', 'August',
+        'September', 'October', 'November', 'December'
     ];
 
     const MODE_NAMES = {
@@ -46,6 +60,77 @@ const HijriCalendar = (() => {
     let currentMode = 'astronomical'; // الافتراضي: فلكي
     let weekStart = 0; // 0=السبت، 1=الأحد، 2=الإثنين
     let numeralStyle = 'hindi'; // 'hindi' = ٠١٢٣ (الافتراضي)، 'arabic' = 0123
+    let currentLang = 'ar'; // 'ar' أو 'en'
+
+    // ─── الترجمة ─────────────────────────────────────────────
+    const _UI = {
+        ar: {
+            title: 'التقويم الهجري',
+            modeLabel: 'نمط الحساب', modeAstro: 'فلكي (اقتران القمر)', modeTab: 'حسابي (التوفيقات الإلهامية)',
+            weekStartLabel: 'بداية الأسبوع', saturday: 'السبت', sunday: 'الأحد', monday: 'الإثنين',
+            numeralLabel: 'نمط الأرقام', numeralHindi: 'هندية (٠١٢٣٤٥)', numeralArabic: 'عربية (012345)',
+            langLabel: 'Language', langAr: 'العربية', langEn: 'English',
+            corrLabel: 'تصحيح الشهر الحالي', corrReset: 'إعادة', corrClearAll: 'مسح الكل',
+            corrections: 'التصحيحات:', noCorrections: 'لا توجد تصحيحات',
+            todayBtn: 'اليوم', leapYear: 'سنة كبيسة', weekCol: 'أسبوع',
+            clickDay: 'انقر على يوم لعرض تفاصيله',
+            goToDate: 'الانتقال إلى تاريخ', hijri: 'هجري', gregorian: 'ميلادي',
+            day: 'اليوم', month: 'الشهر', year: 'السنة', go: 'انتقل',
+            hSuffix: 'هـ', gSuffix: 'م',
+            badgeAstro: 'فلكي', badgeTab: 'حسابي',
+            prevMonth: 'الشهر السابق', nextMonth: 'الشهر التالي',
+            plusDay: 'إضافة يوم', minusDay: 'إنقاص يوم', resetMonth: 'إعادة تعيين هذا الشهر',
+            invalidDate: 'أدخل تاريخاً صحيحاً',
+            aboutTitle: 'المنهج الحسابي',
+            aboutP1: 'يعتمد هذا التقويم على منهجين: <strong>الفلكي</strong> (الافتراضي) يحسب لحظة الاقتران الفلكي للقمر بدقة عالية باستخدام خوارزمية Jean Meeus، ثم يحدد بداية الشهر بناءً على أول يوم بعد الاقتران. <strong>الحسابي</strong> يستخدم نظام الدورة الثلاثينية من كتاب «التوفيقات الإلهامية».',
+            aboutP2: 'السنوات الكبيسة في الدورة: <strong>٢، ٥، ٧، ١٠، ١٣، ١٥، ١٨، ٢١، ٢٤، ٢٦، ٢٩</strong>',
+            aboutP3: 'يمكن للمستخدم تصحيح أي شهر بإضافة أو إنقاص يوم. التصحيح يسري تلقائياً على كل الشهور اللاحقة من نقطة التطبيق فصاعداً. التصحيحات تُحفظ في المتصفح.',
+            footer: 'إعداد عيسى بن راشد الشامسي — دولة الإمارات العربية المتحدة',
+            version: 'الإصدار ١٫٠',
+            credit: 'صُمم بواسطة Claude Code (Opus 4.6)',
+        },
+        en: {
+            title: 'Hijri Calendar',
+            modeLabel: 'Calculation Mode', modeAstro: 'Astronomical (Lunar Conjunction)', modeTab: 'Tabular (al-Tawfiqat al-Ilhamiyyah)',
+            weekStartLabel: 'Week Start', saturday: 'Saturday', sunday: 'Sunday', monday: 'Monday',
+            numeralLabel: 'Numeral Style', numeralHindi: 'Hindi (٠١٢٣٤٥)', numeralArabic: 'Arabic (012345)',
+            langLabel: 'Language', langAr: 'العربية', langEn: 'English',
+            corrLabel: 'Month Correction', corrReset: 'Reset', corrClearAll: 'Clear All',
+            corrections: 'Corrections:', noCorrections: 'No corrections',
+            todayBtn: 'Today', leapYear: 'Leap Year', weekCol: 'Wk',
+            clickDay: 'Click a day for details',
+            goToDate: 'Go to Date', hijri: 'Hijri', gregorian: 'Gregorian',
+            day: 'Day', month: 'Month', year: 'Year', go: 'Go',
+            hSuffix: 'AH', gSuffix: 'CE',
+            badgeAstro: 'Astro', badgeTab: 'Tabular',
+            prevMonth: 'Previous Month', nextMonth: 'Next Month',
+            plusDay: 'Add a day', minusDay: 'Subtract a day', resetMonth: 'Reset this month',
+            invalidDate: 'Enter a valid date',
+            aboutTitle: 'Methodology',
+            aboutP1: 'This calendar uses two methods: <strong>Astronomical</strong> (default) computes lunar conjunction precisely using Jean Meeus algorithms, then determines the month start. <strong>Tabular</strong> uses the 30-year cycle from the book "al-Tawfiqat al-Ilhamiyyah".',
+            aboutP2: 'Leap years in the cycle: <strong>2, 5, 7, 10, 13, 15, 18, 21, 24, 26, 29</strong>',
+            aboutP3: 'Users can correct any month by adding or subtracting a day. Corrections propagate forward automatically. Corrections are saved in the browser.',
+            footer: 'By Eisa bin Rashid Al Shamsi — United Arab Emirates',
+            version: 'Version 1.0',
+            credit: 'Designed with Claude Code (Opus 4.6)',
+        }
+    };
+
+    function t(key) { return (_UI[currentLang] && _UI[currentLang][key]) || _UI.ar[key] || key; }
+
+    function setLang(lang) { if (lang === 'ar' || lang === 'en') currentLang = lang; }
+    function getLang() { return currentLang; }
+    function _loadLang() {
+        try { const l = localStorage.getItem('hijri-lang'); if (l === 'ar' || l === 'en') currentLang = l; } catch (e) { /* ignore */ }
+    }
+    function _saveLang() {
+        try { localStorage.setItem('hijri-lang', currentLang); } catch (e) { /* ignore */ }
+    }
+
+    // ─── مساعدات أسماء حسب اللغة ─────────────────────────────
+    function monthName(i) { return currentLang === 'en' ? MONTH_NAMES_EN[i] : MONTH_NAMES[i]; }
+    function dayName(i) { return currentLang === 'en' ? DAY_NAMES_EN[i] : DAY_NAMES[i]; }
+    function gregMonthName(i) { return currentLang === 'en' ? GREGORIAN_MONTH_NAMES_EN[i] : GREGORIAN_MONTH_NAMES[i]; }
 
     // تصحيحات المستخدم: { "1447-9": +1, "1447-10": -1 }
     // المفتاح = "سنة-شهر"، القيمة = عدد أيام الإزاحة
@@ -606,11 +691,11 @@ const HijriCalendar = (() => {
         const lastGreg = jdnToGregorian(firstDayJDN + totalDays - 1);
         let gregorianRange;
         if (firstGreg.month === lastGreg.month && firstGreg.year === lastGreg.year) {
-            gregorianRange = `${GREGORIAN_MONTH_NAMES[firstGreg.month - 1]} ${firstGreg.year}`;
+            gregorianRange = `${gregMonthName(firstGreg.month - 1)} ${toArabicNumerals(firstGreg.year)}`;
         } else if (firstGreg.year === lastGreg.year) {
-            gregorianRange = `${GREGORIAN_MONTH_NAMES[firstGreg.month - 1]} – ${GREGORIAN_MONTH_NAMES[lastGreg.month - 1]} ${firstGreg.year}`;
+            gregorianRange = `${gregMonthName(firstGreg.month - 1)} – ${gregMonthName(lastGreg.month - 1)} ${toArabicNumerals(firstGreg.year)}`;
         } else {
-            gregorianRange = `${GREGORIAN_MONTH_NAMES[firstGreg.month - 1]} ${firstGreg.year} – ${GREGORIAN_MONTH_NAMES[lastGreg.month - 1]} ${lastGreg.year}`;
+            gregorianRange = `${gregMonthName(firstGreg.month - 1)} ${toArabicNumerals(firstGreg.year)} – ${gregMonthName(lastGreg.month - 1)} ${toArabicNumerals(lastGreg.year)}`;
         }
 
         // إضافة رقم الأسبوع لكل يوم
@@ -623,12 +708,12 @@ const HijriCalendar = (() => {
         // ترتيب رؤوس الأيام حسب بداية الأسبوع
         const orderedDayNames = [];
         for (let i = 0; i < 7; i++) {
-            orderedDayNames.push(DAY_NAMES[(weekStart + i) % 7]);
+            orderedDayNames.push(dayName((weekStart + i) % 7));
         }
 
         return {
             year, month,
-            monthName: MONTH_NAMES[month - 1],
+            monthName: monthName(month - 1),
             totalDays,
             isLeapYear: isLeapYear(year),
             firstDayOfWeek,
@@ -647,6 +732,7 @@ const HijriCalendar = (() => {
     _loadMode();
     _loadWeekStart();
     _loadNumeralStyle();
+    _loadLang();
 
     // ─── الواجهة العامة ─────────────────────────────────────
     return {
@@ -660,6 +746,10 @@ const HijriCalendar = (() => {
 
         // نمط الأرقام
         setNumeralStyle, getNumeralStyle, _saveNumeralStyle,
+
+        // اللغة
+        t, setLang, getLang, _saveLang,
+        monthName, dayName, gregMonthName,
 
         // التصحيحات
         setCorrection, getCorrection, clearCorrections, getAllCorrections,
